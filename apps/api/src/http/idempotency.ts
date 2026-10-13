@@ -36,7 +36,7 @@ export async function runIdempotent<T>(
   commandScope: string,
   body: unknown,
   command: (tx: Tx, key: string) => Promise<CommandResult<T>>,
-): Promise<T> {
+): Promise<unknown> {
   const key = idempotencyKeyOf(request);
   const orgId = scope.principal.organisationId;
   const actorId = scope.principal.userId;
@@ -62,7 +62,8 @@ export async function runIdempotent<T>(
     }
     if (existing.state === "COMPLETED") {
       void reply.status(existing.responseStatus ?? 200).header("idempotency-replayed", "true");
-      return existing.responseBody as T;
+      // A replay returns the stored JSON response exactly as first sent.
+      return existing.responseBody;
     }
     const reclaimed = await ctx.db
       .update(idempotencyRecords)

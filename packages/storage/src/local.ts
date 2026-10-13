@@ -1,15 +1,19 @@
+import { z } from "zod";
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, writeFile, stat, rename } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
 import { ObjectConflictError, type ObjectStore, type PresignRequest, type PresignedPut } from "./object-store";
 
-export interface UploadTokenClaims {
-  key: string;
-  contentType: string;
-  sizeBytes: number;
-  sha256Hex: string;
-  exp: number;
-}
+const UploadTokenClaimsSchema = z
+  .object({
+    key: z.string().min(1),
+    contentType: z.string().min(1),
+    sizeBytes: z.number().int().nonnegative(),
+    sha256Hex: z.string().regex(/^[0-9a-f]{64}$/),
+    exp: z.number().int(),
+  })
+  .strict();
+export type UploadTokenClaims = z.infer<typeof UploadTokenClaimsSchema>;
 
 /**
  * Filesystem-backed store for local development and tests, used when no S3
@@ -97,9 +101,9 @@ export class LocalObjectStore implements ObjectStore {
     const given = Buffer.from(mac, "base64url");
     if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
     try {
-      const claims = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as UploadTokenClaims;
-      if (typeof claims.exp !== "number" || claims.exp * 1000 < now.getTime()) return null;
-      return claims;
+      const parsed = UploadTokenClaimsSchema.safeParse(JSON.parse(Buffer.from(body, "base64url").toString("utf8")));
+      if (!parsed.success || parsed.data.exp * 1000 < now.getTime()) return null;
+      return parsed.data;
     } catch {
       return null;
     }

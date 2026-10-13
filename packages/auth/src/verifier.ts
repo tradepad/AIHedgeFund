@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { verifyToken } from "@clerk/backend";
 import { err, ok, type Result } from "@arf/contracts";
 
@@ -42,11 +43,13 @@ export class DevAuthVerifier implements AuthVerifier {
   }
 }
 
-interface ClerkClaims {
-  sub?: unknown;
-  org_id?: unknown;
-  o?: { id?: unknown } | undefined;
-}
+const ClerkClaimsSchema = z
+  .object({
+    sub: z.string().min(1),
+    org_id: z.string().optional(),
+    o: z.object({ id: z.string().optional() }).loose().optional(),
+  })
+  .loose();
 
 export class ClerkAuthVerifier implements AuthVerifier {
   readonly mode = "clerk" as const;
@@ -60,13 +63,15 @@ export class ClerkAuthVerifier implements AuthVerifier {
     const token = bearer(header);
     if (!token) return err({ code: "UNAUTHENTICATED", detail: "missing bearer token" });
     try {
-      const claims = (await this.verify_(token, {
-        secretKey: this.options.secretKey,
-        authorizedParties: this.options.authorizedParties,
-      })) as ClerkClaims;
-      if (typeof claims.sub !== "string") return err({ code: "INVALID_TOKEN", detail: "token has no subject" });
-      const orgClaim = typeof claims.org_id === "string" ? claims.org_id : claims.o?.id;
-      return ok({ subject: claims.sub, externalOrgId: typeof orgClaim === "string" ? orgClaim : null });
+      const parsed = ClerkClaimsSchema.safeParse(
+        await this.verify_(token, {
+          secretKey: this.options.secretKey,
+          authorizedParties: this.options.authorizedParties,
+        }),
+      );
+      if (!parsed.success) return err({ code: "INVALID_TOKEN", detail: "token has no subject" });
+      const claims = parsed.data;
+      return ok({ subject: claims.sub, externalOrgId: claims.org_id ?? claims.o?.id ?? null });
     } catch {
       // Never echo token contents or provider error text to the caller.
       return err({ code: "INVALID_TOKEN", detail: "token verification failed" });

@@ -1,5 +1,5 @@
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
-import { uuidv7, type ActorRef, type AggregateType, type DomainEvent, type DomainEventType } from "@arf/contracts";
+import { DomainEventSchema, uuidv7, type ActorRef, type AggregateType, type DomainEvent, type DomainEventType } from "@arf/contracts";
 import { outboxEvents } from "./schema";
 import type { Database, DbOrTx } from "./client";
 
@@ -40,21 +40,22 @@ export async function enqueueOutbox(tx: DbOrTx, input: OutboxInput): Promise<str
   return id;
 }
 
+/** Rebuild a domain event from its outbox row, validated against the contract. */
 export function toDomainEvent(row: typeof outboxEvents.$inferSelect): DomainEvent {
-  return {
+  return DomainEventSchema.parse({
     eventId: row.id,
-    eventType: row.eventType as DomainEventType,
+    eventType: row.eventType,
     eventVersion: row.eventVersion,
     organisationId: row.organisationId,
     aggregateType: row.aggregateType,
     aggregateId: row.aggregateId,
     correlationId: row.correlationId,
     causationId: row.causationId,
-    actor: row.actor as ActorRef,
+    actor: row.actor,
     occurredAt: row.createdAt.toISOString(),
     traceId: row.traceId,
-    payload: row.payload as Record<string, unknown>,
-  };
+    payload: row.payload,
+  });
 }
 
 /**

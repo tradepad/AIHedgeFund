@@ -1,6 +1,6 @@
 import { Queue, Worker, type ConnectionOptions, type Job, type WorkerOptions } from "bullmq";
 import type { DomainEvent } from "@arf/contracts";
-import { JobPayloadSchema, QUEUES, jobIdFor, routesFor, toJobPayload, type JobName, type JobPayload, type QueueName } from "./jobs";
+import { JOB_NAMES, JobPayloadSchema, QUEUES, jobIdFor, routesFor, toJobPayload, type JobName, type JobPayload, type QueueName } from "./jobs";
 
 export const DEFAULT_JOB_OPTIONS = {
   attempts: 5,
@@ -57,7 +57,8 @@ export function startWorker(
   return new Worker(
     queue,
     async (job) => {
-      const handler = handlers[job.name as JobName];
+      const name = JOB_NAMES.find((n) => n === job.name);
+      const handler = name ? handlers[name] : undefined;
       if (!handler) throw new Error(`no handler for job ${job.name} on ${queue}`);
       const payload = JobPayloadSchema.parse(job.data);
       await handler(payload, job);
