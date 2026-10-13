@@ -14,6 +14,8 @@ export async function buildApp(ctx: AppContext): Promise<FastifyInstance> {
   const app = Fastify({
     logger: false,
     bodyLimit: 1024 * 1024,
+    // Presigned local-upload tokens are long path parameters.
+    routerOptions: { maxParamLength: 4096 },
     trustProxy: ctx.config.NODE_ENV === "production",
     genReqId: () => "",
   });

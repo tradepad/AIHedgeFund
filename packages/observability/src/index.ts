@@ -1,3 +1,4 @@
+import { createServer, type Server } from "node:http";
 import { randomBytes } from "node:crypto";
 import { SpanStatusCode, metrics, trace, type Attributes } from "@opentelemetry/api";
 import pino, { type Logger } from "pino";
@@ -90,3 +91,27 @@ export const instruments = {
   modelSchemaFailures: meter.createCounter("arf.model.schema_failures"),
   modelCostUsd: meter.createCounter("arf.model.cost_usd"),
 };
+
+/**
+ * Minimal liveness/readiness endpoint for background workers. `/healthz`
+ * reports the process is up; `/readyz` runs the dependency check.
+ */
+export function startHealthServer(port: number, service: string, ready: () => Promise<boolean>): Server {
+  const server = createServer((req, res) => {
+    const send = (status: number, body: Record<string, unknown>) => {
+      res.writeHead(status, { "content-type": "application/json" });
+      res.end(JSON.stringify(body));
+    };
+    if (req.url === "/healthz") return send(200, { status: "ok", service });
+    if (req.url === "/readyz") {
+      ready().then(
+        (ok) => send(ok ? 200 : 503, { status: ok ? "ready" : "unavailable", service }),
+        () => send(503, { status: "unavailable", service }),
+      );
+      return;
+    }
+    send(404, { status: "not_found" });
+  });
+  server.listen(port);
+  return server;
+}

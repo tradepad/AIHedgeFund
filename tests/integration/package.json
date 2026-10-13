@@ -1,0 +1,40 @@
+{
+  "name": "@arf/integration-tests",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./harness": "./src/harness.ts",
+    "./client": "./src/client.ts",
+    "./flow": "./src/flow.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test:integration": "vitest run"
+  },
+  "dependencies": {
+    "@arf/agent-runtime": "workspace:*",
+    "@arf/api": "workspace:*",
+    "@arf/auth": "workspace:*",
+    "@arf/contracts": "workspace:*",
+    "@arf/db": "workspace:*",
+    "@arf/event-bus": "workspace:*",
+    "@arf/metrics": "workspace:*",
+    "@arf/observability": "workspace:*",
+    "@arf/pine": "workspace:*",
+    "@arf/storage": "workspace:*",
+    "@arf/worker-analytics": "workspace:*",
+    "@arf/worker-backtest": "workspace:*",
+    "@arf/worker-research": "workspace:*",
+    "@arf/workflow": "workspace:*",
+    "bullmq": "5.61.0",
+    "drizzle-orm": "0.44.7",
+    "ioredis": "5.8.1",
+    "pg": "8.16.3",
+    "zod": "4.1.13"
+  },
+  "devDependencies": {
+    "@types/pg": "8.15.5"
+  }
+}
