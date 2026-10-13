@@ -1,0 +1,23 @@
+{
+  "name": "@arf/pine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "fixtures:generate": "tsx scripts/generate-fixtures.ts"
+  },
+  "dependencies": {
+    "@arf/contracts": "workspace:*",
+    "decimal.js": "10.6.0",
+    "luxon": "3.7.2"
+  },
+  "devDependencies": {
+    "@types/luxon": "3.7.1"
+  }
+}

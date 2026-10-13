@@ -1,0 +1,225 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "pineVersion": {
+      "type": "number",
+      "const": 6
+    },
+    "strategyId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "strategyVersionId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "campaignId": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+    },
+    "parentVersionId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "sdlHash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "symbol": {
+      "type": "string",
+      "pattern": "^[A-Z0-9_]+:[A-Z0-9._!-]+$"
+    },
+    "timeframe": {
+      "type": "string",
+      "pattern": "^(\\d+|\\d*[DWM]|\\d+S)$"
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "initialCapital": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3,5}$"
+        },
+        "defaultQtyType": {
+          "type": "string",
+          "enum": [
+            "strategy.percent_of_equity",
+            "strategy.fixed",
+            "strategy.cash"
+          ]
+        },
+        "defaultQtyValue": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "commissionType": {
+          "type": "string",
+          "enum": [
+            "strategy.commission.percent",
+            "strategy.commission.cash_per_order",
+            "strategy.commission.cash_per_contract"
+          ]
+        },
+        "commissionValue": {
+          "type": "number",
+          "minimum": 0
+        },
+        "slippageTicks": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "pyramiding": {
+          "type": "number",
+          "const": 0
+        },
+        "marginLongPct": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "marginShortPct": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 100
+        },
+        "processOrdersOnClose": {
+          "type": "boolean"
+        },
+        "calcOnEveryTick": {
+          "type": "boolean"
+        },
+        "calcOnOrderFills": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "initialCapital",
+        "currency",
+        "defaultQtyType",
+        "defaultQtyValue",
+        "commissionType",
+        "commissionValue",
+        "slippageTicks",
+        "pyramiding",
+        "marginLongPct",
+        "marginShortPct",
+        "processOrdersOnClose",
+        "calcOnEveryTick",
+        "calcOnOrderFills"
+      ],
+      "additionalProperties": false
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,63}$"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "int",
+              "float",
+              "bool"
+            ]
+          },
+          "default": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ]
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "step": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "required": [
+          "key",
+          "type",
+          "default"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "dateWindow": {
+      "type": "object",
+      "properties": {
+        "startInputKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "endInputKey": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "startInputKey",
+        "endInputKey"
+      ],
+      "additionalProperties": false
+    },
+    "alertSchema": {
+      "type": "string",
+      "const": "arf.signal.v1"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "pineVersion",
+    "strategyId",
+    "strategyVersionId",
+    "campaignId",
+    "parentVersionId",
+    "sdlHash",
+    "title",
+    "symbol",
+    "timeframe",
+    "properties",
+    "inputs",
+    "dateWindow",
+    "alertSchema"
+  ],
+  "additionalProperties": false,
+  "$id": "https://arf-os.dev/schemas/pine-manifest/1.0.0"
+}

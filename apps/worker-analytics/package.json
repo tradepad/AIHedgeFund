@@ -1,0 +1,32 @@
+{
+  "name": "@arf/worker-analytics",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/main.ts",
+    "start": "node --env-file-if-exists=../../.env dist/main.js",
+    "build": "tsup",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@arf/contracts": "workspace:*",
+    "@arf/db": "workspace:*",
+    "@arf/event-bus": "workspace:*",
+    "@arf/metrics": "workspace:*",
+    "@arf/observability": "workspace:*",
+    "bullmq": "5.61.0",
+    "drizzle-orm": "0.44.7",
+    "zod": "4.1.13",
+    "luxon": "3.7.2"
+  },
+  "devDependencies": {
+    "tsup": "8.5.0",
+    "@types/luxon": "3.7.1"
+  },
+  "exports": {
+    "./handlers": "./src/handlers.ts"
+  }
+}

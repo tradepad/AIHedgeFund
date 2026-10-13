@@ -1,0 +1,20 @@
+{
+  "name": "@arf/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./node": "./src/node.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "schemas:generate": "tsx scripts/generate-json-schemas.ts",
+    "schemas:check": "tsx scripts/generate-json-schemas.ts --check"
+  },
+  "dependencies": {
+    "zod": "4.1.13"
+  }
+}

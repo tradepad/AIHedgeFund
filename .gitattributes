@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Fixtures are evidence: preserve exact bytes (line endings affect checksums).
+pine/fixtures/** -text

@@ -1,0 +1,18 @@
+{
+  "name": "@arf/backtest-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@arf/contracts": "workspace:*",
+    "@arf/pine": "workspace:*"
+  }
+}

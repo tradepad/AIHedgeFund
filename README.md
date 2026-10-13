@@ -4,7 +4,7 @@
 
 **A multi-agent operating system for discovering, developing, testing, rejecting, forward-testing, and cataloguing systematic trading strategies.**
 
-> **Project status:** Specification complete · MVP implementation pending  
+> **Project status:** First vertical slice implemented (evidence registry, TradingView verification, parity, committee decision) · later phases pending  
 > **Strategy language:** Pine Script® v6  
 > **Primary stack:** TypeScript · Next.js · Fastify · PostgreSQL · Redis · BullMQ  
 > **Deployment target:** Railway-compatible services
@@ -470,12 +470,50 @@ This milestone validates the hardest foundations: contracts, versioning, ingesti
 | Initial JSON schemas | Complete |
 | Repository engineering policy | Complete |
 | MVP vertical-slice build prompt | Complete |
-| Application monorepo | Not started |
-| TradingView CSV ingestion | Not started |
-| Strategy registry and UI | Not started |
-| Multi-agent runtime | Not started |
-| Forward-test paper engine | Not started |
+| Application monorepo | Vertical slice implemented |
+| TradingView CSV ingestion and parity | Implemented (two export layouts per report) |
+| Strategy registry and UI | Implemented (campaigns, library, strategy detail, verification, decision) |
+| Multi-agent runtime | Structured runner and IDEA_SCOUT with a fixture provider only |
+| Local backtest runner | Not started |
+| Forward-test paper engine | Not started (worker shell only) |
 | Live execution | Intentionally out of scope |
+
+Progress by milestone is tracked in [`docs/PROGRESS.md`](./docs/PROGRESS.md).
+
+---
+
+## Running the vertical slice locally
+
+Requirements: Node.js 22.12 or later, pnpm 10, PostgreSQL 16 and Redis 7
+(Docker Compose or local binaries).
+
+```bash
+pnpm install
+cp .env.example .env            # set LOCAL_STORAGE_DIR (absolute) and LOCAL_STORAGE_SIGNING_SECRET
+pnpm services:up                # PostgreSQL + Redis (Docker, or local binaries without Docker)
+pnpm db:migrate
+pnpm db:seed                    # development organisations, users and the approved IDEA_SCOUT prompt
+pnpm dev                        # API :4000, web :3000, workers (health :4101-4104)
+```
+
+Open http://localhost:3000 and sign in as a development user. Use the
+synthetic exports in `pine/fixtures/tradingview` to walk through a
+verification; they are development fixtures, not real TradingView output.
+
+| Command | What it runs |
+|---|---|
+| `pnpm lint` · `pnpm typecheck` · `pnpm test` | ESLint, `tsc`, unit tests in every workspace |
+| `pnpm test:integration` | API, outbox, BullMQ workers and orchestrator against throwaway PostgreSQL databases and Redis db 15 |
+| `pnpm test:e2e` | Playwright journey through the ten user steps against a fresh stack |
+| `pnpm build` | Production builds of every app |
+
+Further reading:
+
+- [Architecture](./docs/architecture.md) and [database overview](./docs/database.md)
+- [API reference and curl walkthrough](./docs/api.md)
+- [TradingView parsers](./docs/tradingview-parsers.md) and [development fixtures](./docs/fixtures.md)
+- [Troubleshooting](./docs/troubleshooting.md)
+- ADRs: [queue and outbox](./docs/adr/0001-queue-bullmq-with-outbox.md), [object storage](./docs/adr/0002-object-storage.md), [workflow engine](./docs/adr/0003-workflow-engine.md), [TradingView verification](./docs/adr/0004-tradingview-verification.md)
 
 ---
 
@@ -552,7 +590,7 @@ Live-capital execution requires a separate legal, operational, security, and ris
 
 ## Contributing
 
-The project is currently specification-first. Contributions are most valuable when they preserve the system’s core separation of duties and improve reproducibility rather than merely increasing strategy throughput.
+Contributions are most valuable when they preserve the system’s core separation of duties and improve reproducibility rather than merely increasing strategy throughput.
 
 Before opening a pull request:
 
@@ -563,7 +601,7 @@ Before opening a pull request:
 5. Run linting, type checks, unit tests, and relevant integration tests.
 6. Never weaken protected-data, audit, idempotency, or versioning rules for convenience.
 
-A formal `CONTRIBUTING.md` will be added with the application scaffold.
+A formal `CONTRIBUTING.md` has not been written yet; until then `CLAUDE.md` is the contributor guide.
 
 ---
 
