@@ -16,6 +16,7 @@ export * from "./decision";
 export * from "./audit";
 export * from "./events";
 export * from "./agent";
+export * from "./views";
 export * from "./examples";
 export * from "./json-schemas";
 export * from "./canonical";

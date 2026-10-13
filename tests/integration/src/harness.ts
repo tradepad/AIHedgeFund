@@ -89,20 +89,31 @@ export interface Stack {
  * Start the API, outbox relay, orchestrator and all pipeline workers
  * in-process against a fresh database and the test Redis database.
  */
-export async function startStack(options: { workers?: boolean; fixtureMode?: "valid" | "invalid-then-valid" | "always-invalid"; rateLimitMax?: number } = {}): Promise<Stack> {
+export interface StackOptions {
+  workers?: boolean;
+  fixtureMode?: "valid" | "invalid-then-valid" | "always-invalid";
+  rateLimitMax?: number;
+  /** Fixed API port; a free port is chosen when omitted. */
+  port?: number;
+  /** Public base for presigned upload URLs (e.g. the web BFF); defaults to the API itself. */
+  uploadBaseUrl?: string;
+}
+
+export async function startStack(options: StackOptions = {}): Promise<Stack> {
   const db = await createTestDatabase();
   await clearQueues();
-  const port = await freePort();
+  const port = options.port ?? (await freePort());
   const baseUrl = `http://127.0.0.1:${port}`;
+  const uploadBaseUrl = options.uploadBaseUrl ?? baseUrl;
   const storageDir = mkdtempSync(join(tmpdir(), "arf-objects-"));
-  const store = new LocalObjectStore(storageDir, "integration-test-signing-secret-0123456789", baseUrl);
+  const store = new LocalObjectStore(storageDir, "integration-test-signing-secret-0123456789", uploadBaseUrl);
   const config = ConfigSchema.parse({
     NODE_ENV: "test",
     DATABASE_URL: db.url,
     REDIS_URL: TEST_REDIS_URL,
     LOCAL_STORAGE_SIGNING_SECRET: "integration-test-signing-secret-0123456789",
     LOCAL_STORAGE_DIR: storageDir,
-    UPLOAD_PUBLIC_BASE_URL: baseUrl,
+    UPLOAD_PUBLIC_BASE_URL: uploadBaseUrl,
     RATE_LIMIT_MAX: String(options.rateLimitMax ?? 1000),
     LOG_LEVEL: "silent",
   });

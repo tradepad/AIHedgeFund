@@ -11,7 +11,8 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json",
-    "test:integration": "vitest run"
+    "test:integration": "vitest run",
+    "e2e:stack": "tsx src/e2e-stack.ts"
   },
   "dependencies": {
     "@arf/agent-runtime": "workspace:*",
