@@ -1,3 +1,4 @@
+import { isAbsolute } from "node:path";
 import { z } from "zod";
 import { LocalObjectStore } from "./local";
 import type { ObjectStore } from "./object-store";
@@ -8,7 +9,8 @@ const bool = z.enum(["true", "false"]).transform((v) => v === "true");
 export const StorageEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
-  LOCAL_STORAGE_DIR: z.string().default(".data/objects"),
+  /** Absolute, so the API and every worker resolve the same directory whatever their working directory. */
+  LOCAL_STORAGE_DIR: z.string().refine((p) => isAbsolute(p), "LOCAL_STORAGE_DIR must be an absolute path").optional(),
   LOCAL_STORAGE_SIGNING_SECRET: z.string().min(32).optional(),
   UPLOAD_PUBLIC_BASE_URL: z.string().url().default("http://localhost:3000/arf-api"),
   S3_ENDPOINT: z.string().optional(),
@@ -37,5 +39,6 @@ export function createObjectStore(env: StorageEnv): ObjectStore {
   }
   if (env.NODE_ENV === "production") throw new Error("the local storage driver is not allowed in production");
   if (!env.LOCAL_STORAGE_SIGNING_SECRET) throw new Error("LOCAL_STORAGE_SIGNING_SECRET is required for STORAGE_DRIVER=local");
+  if (!env.LOCAL_STORAGE_DIR) throw new Error("LOCAL_STORAGE_DIR is required for STORAGE_DRIVER=local");
   return new LocalObjectStore(env.LOCAL_STORAGE_DIR, env.LOCAL_STORAGE_SIGNING_SECRET, env.UPLOAD_PUBLIC_BASE_URL);
 }

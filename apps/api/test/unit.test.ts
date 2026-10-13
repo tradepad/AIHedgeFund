@@ -5,7 +5,7 @@ import { ProblemError } from "../src/http/problem";
 import { SeqCursor, decodeCursor, encodeCursor, page } from "../src/http/pagination";
 import { overridableWarnings } from "../src/services/decisions";
 
-const base = { DATABASE_URL: "postgres://x/y", REDIS_URL: "redis://x", LOCAL_STORAGE_SIGNING_SECRET: "0123456789abcdef0123456789abcdef" };
+const base = { DATABASE_URL: "postgres://x/y", REDIS_URL: "redis://x", LOCAL_STORAGE_SIGNING_SECRET: "0123456789abcdef0123456789abcdef", LOCAL_STORAGE_DIR: "/var/lib/arf/objects" };
 
 describe("configuration", () => {
   it("accepts the local development defaults", () => {
@@ -18,6 +18,10 @@ describe("configuration", () => {
     const r = ConfigSchema.safeParse({ ...base, NODE_ENV: "production" });
     expect(r.success).toBe(false);
     expect(r.error?.issues.map((i) => i.path.join("."))).toEqual(expect.arrayContaining(["AUTH_MODE", "STORAGE_DRIVER"]));
+  });
+
+  it("requires an absolute local storage directory shared by every process", () => {
+    expect(ConfigSchema.safeParse({ ...base, LOCAL_STORAGE_DIR: ".data/objects" }).success).toBe(false);
   });
 
   it("requires a signing secret for the local object store and S3 credentials for s3", () => {

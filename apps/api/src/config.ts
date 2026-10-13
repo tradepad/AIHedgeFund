@@ -1,3 +1,4 @@
+import { isAbsolute } from "node:path";
 import { z } from "zod";
 
 const bool = z.enum(["true", "false"]).transform((v) => v === "true");
@@ -13,7 +14,8 @@ export const ConfigSchema = z
     CLERK_SECRET_KEY: z.string().optional(),
     CLERK_AUTHORIZED_PARTIES: z.string().optional(),
     STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
-    LOCAL_STORAGE_DIR: z.string().default(".data/objects"),
+  /** Absolute, so the API and every worker resolve the same directory whatever their working directory. */
+  LOCAL_STORAGE_DIR: z.string().refine((p) => isAbsolute(p), "LOCAL_STORAGE_DIR must be an absolute path").optional(),
     LOCAL_STORAGE_SIGNING_SECRET: z.string().min(32).optional(),
     UPLOAD_PUBLIC_BASE_URL: z.string().url().default("http://localhost:3000/arf-api"),
     S3_ENDPOINT: z.string().optional(),
@@ -36,6 +38,9 @@ export const ConfigSchema = z
     }
     if (c.STORAGE_DRIVER === "local" && !c.LOCAL_STORAGE_SIGNING_SECRET) {
       ctx.addIssue({ code: "custom", path: ["LOCAL_STORAGE_SIGNING_SECRET"], message: "required when STORAGE_DRIVER=local" });
+    }
+    if (c.STORAGE_DRIVER === "local" && !c.LOCAL_STORAGE_DIR) {
+      ctx.addIssue({ code: "custom", path: ["LOCAL_STORAGE_DIR"], message: "required when STORAGE_DRIVER=local" });
     }
     if (c.STORAGE_DRIVER === "local" && c.NODE_ENV === "production") {
       ctx.addIssue({ code: "custom", path: ["STORAGE_DRIVER"], message: "use s3 storage in production" });

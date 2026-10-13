@@ -2,25 +2,11 @@ import { DevAuthVerifier, createAuthVerifier } from "@arf/auth";
 import { createDb } from "@arf/db";
 import { EventBus, redisConnection } from "@arf/event-bus";
 import { createLogger } from "@arf/observability";
-import { LocalObjectStore, S3ObjectStore, type ObjectStore } from "@arf/storage";
+import { createObjectStore } from "@arf/storage";
 import { WorkflowEngine } from "@arf/workflow";
 import { buildApp } from "./app";
 import { startOrchestrator, startOutboxRelay } from "./background";
-import { loadConfig, type Config } from "./config";
-
-function createStore(config: Config): ObjectStore {
-  if (config.STORAGE_DRIVER === "s3") {
-    return new S3ObjectStore({
-      endpoint: config.S3_ENDPOINT,
-      region: config.S3_REGION,
-      bucket: config.S3_BUCKET ?? "",
-      accessKeyId: config.S3_ACCESS_KEY_ID ?? "",
-      secretAccessKey: config.S3_SECRET_ACCESS_KEY ?? "",
-      forcePathStyle: config.S3_FORCE_PATH_STYLE,
-    });
-  }
-  return new LocalObjectStore(config.LOCAL_STORAGE_DIR, config.LOCAL_STORAGE_SIGNING_SECRET ?? "", config.UPLOAD_PUBLIC_BASE_URL);
-}
+import { loadConfig } from "./config";
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -33,7 +19,7 @@ async function main(): Promise<void> {
       ? new DevAuthVerifier(config.NODE_ENV)
       : createAuthVerifier({ mode: "clerk", nodeEnv: config.NODE_ENV, clerkSecretKey: config.CLERK_SECRET_KEY, clerkAuthorizedParties: config.CLERK_AUTHORIZED_PARTIES?.split(",").map((s) => s.trim()) });
   const workflow = new WorkflowEngine();
-  const app = await buildApp({ config, db, store: createStore(config), auth, workflow, logger, bus });
+  const app = await buildApp({ config, db, store: createObjectStore(config), auth, workflow, logger, bus });
 
   const stopRelay = config.OUTBOX_RELAY_ENABLED ? startOutboxRelay(db, bus, logger) : null;
   const orchestrator = config.ORCHESTRATOR_ENABLED ? startOrchestrator(db, workflow, config.REDIS_URL, logger) : null;
