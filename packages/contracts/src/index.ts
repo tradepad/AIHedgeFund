@@ -18,3 +18,4 @@ export * from "./events";
 export * from "./agent";
 export * from "./examples";
 export * from "./json-schemas";
+export * from "./canonical";

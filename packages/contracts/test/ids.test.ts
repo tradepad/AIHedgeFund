@@ -21,3 +21,21 @@ describe("uuidv7", () => {
     expect(ids.size).toBe(10_000);
   });
 });
+
+import { canonicalJson } from "../src";
+import { hashCanonical, sha256Hex } from "../src/node";
+
+describe("canonical hashing", () => {
+  it("is independent of key order", () => {
+    expect(canonicalJson({ b: 1, a: { d: [3, { y: 1, x: 2 }], c: "z" } })).toBe('{"a":{"c":"z","d":[3,{"x":2,"y":1}]},"b":1}');
+    expect(hashCanonical({ a: 1, b: 2 })).toBe(hashCanonical({ b: 2, a: 1 }));
+  });
+
+  it("rejects non-finite numbers rather than serialising null", () => {
+    expect(() => canonicalJson({ x: Number.NaN })).toThrow();
+  });
+
+  it("hashes known vectors", () => {
+    expect(sha256Hex("abc")).toBe("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+  });
+});
