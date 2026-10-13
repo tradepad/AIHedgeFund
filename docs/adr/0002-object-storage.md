@@ -35,8 +35,9 @@ the API and two workers all need the same store and object-path rules.
 ## Alternatives
 
 - **MinIO in development.** Closest to production; not possible in the build
-  environment and adds a service for every contributor. The compose file still
-  provides it for anyone who wants the S3 driver locally.
+  environment and adds a service for every contributor. The MinIO image is no
+  longer published on Docker Hub, so the compose file does not include it;
+  point the S3 driver at any S3-compatible endpoint to test it locally.
 - **Uploads through the API body.** Simpler, but the specification asks for
   presigned uploads and it couples API memory to file size.
 
