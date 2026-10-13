@@ -29,10 +29,18 @@ export class ApiClient {
     return { status: res.status, body: (await res.json()) as T, headers: res.headers };
   }
 
-  async send<T = Record<string, unknown>>(method: "POST" | "PUT", path: string, body: unknown, idempotencyKey: string = randomUUID()): Promise<ApiResponse<T>> {
+  async send<T = Record<string, unknown>>(
+    method: "POST" | "PUT",
+    path: string,
+    body: unknown,
+    idempotencyKey: string = randomUUID(),
+  ): Promise<ApiResponse<T>> {
     const res = await fetch(`${this.baseUrl}${path}`, {
       method,
-      headers: this.headers({ "content-type": "application/json", "idempotency-key": idempotencyKey }),
+      headers: this.headers({
+        "content-type": "application/json",
+        "idempotency-key": idempotencyKey,
+      }),
       body: JSON.stringify(body),
     });
     return { status: res.status, body: (await res.json()) as T, headers: res.headers };
@@ -48,6 +56,7 @@ export class ApiClient {
 }
 
 export function expectStatus<T>(res: ApiResponse<T>, status: number): T {
-  if (res.status !== status) throw new Error(`expected HTTP ${status}, got ${res.status}: ${JSON.stringify(res.body)}`);
+  if (res.status !== status)
+    throw new Error(`expected HTTP ${status}, got ${res.status}: ${JSON.stringify(res.body)}`);
   return res.body;
 }

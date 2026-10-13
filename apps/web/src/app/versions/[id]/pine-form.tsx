@@ -2,7 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { PineManifestSchema, PineRevisionRecordSchema, PineTemplateViewSchema, type PineTemplateView } from "@arf/contracts";
+import {
+  PineManifestSchema,
+  PineRevisionRecordSchema,
+  PineTemplateViewSchema,
+  type PineTemplateView,
+} from "@arf/contracts";
 import { Badge } from "@arf/ui";
 import { ProblemInline } from "@/components/problem-inline";
 import { useCommand } from "@/components/use-command";
@@ -24,7 +29,10 @@ export function PineForm({ versionId }: { versionId: string }) {
   const [manifestError, setManifestError] = useState<string | null>(null);
 
   async function generate() {
-    const res = await clientGet(`/v1/strategy-versions/${versionId}/pine/template?initialCapital=${encodeURIComponent(capital)}&currency=${encodeURIComponent(currency)}`, PineTemplateViewSchema);
+    const res = await clientGet(
+      `/v1/strategy-versions/${versionId}/pine/template?initialCapital=${encodeURIComponent(capital)}&currency=${encodeURIComponent(currency)}`,
+      PineTemplateViewSchema,
+    );
     setTemplate(res);
     if (res.ok) {
       setSource(res.data.source);
@@ -42,11 +50,16 @@ export function PineForm({ versionId }: { versionId: string }) {
     }
     const parsed = PineManifestSchema.safeParse(manifest);
     if (!parsed.success) {
-      setManifestError(parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
+      setManifestError(
+        parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "),
+      );
       return;
     }
     setManifestError(null);
-    if (await attach.run(`/v1/strategy-versions/${versionId}/pine`, { source, manifest: parsed.data })) router.refresh();
+    if (
+      await attach.run(`/v1/strategy-versions/${versionId}/pine`, { source, manifest: parsed.data })
+    )
+      router.refresh();
   }
 
   return (
@@ -55,13 +68,27 @@ export function PineForm({ versionId }: { versionId: string }) {
       <div className="row">
         <label>
           Initial capital
-          <input value={capital} onChange={(e) => setCapital(e.target.value)} inputMode="decimal" size={10} />
+          <input
+            value={capital}
+            onChange={(e) => setCapital(e.target.value)}
+            inputMode="decimal"
+            size={10}
+          />
         </label>
         <label>
           Currency
-          <input value={currency} onChange={(e) => setCurrency(e.target.value.toUpperCase())} size={6} />
+          <input
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value.toUpperCase())}
+            size={6}
+          />
         </label>
-        <button type="button" className="secondary" onClick={() => void generate()} data-testid="generate-pine">
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => void generate()}
+          data-testid="generate-pine"
+        >
           Generate from approved template
         </button>
       </div>
@@ -69,7 +96,17 @@ export function PineForm({ versionId }: { versionId: string }) {
       {template?.ok ? (
         <>
           <div className="row">
-            <Badge tone={template.data.lint.status === "PASS" ? "good" : template.data.lint.status === "WARN" ? "warn" : "bad"}>template lint {template.data.lint.status.toLowerCase()}</Badge>
+            <Badge
+              tone={
+                template.data.lint.status === "PASS"
+                  ? "good"
+                  : template.data.lint.status === "WARN"
+                    ? "warn"
+                    : "bad"
+              }
+            >
+              template lint {template.data.lint.status.toLowerCase()}
+            </Badge>
             <span className="mono muted">sha256 {template.data.sourceHash.slice(0, 16)}…</span>
           </div>
           <label>
@@ -78,7 +115,11 @@ export function PineForm({ versionId }: { versionId: string }) {
           </label>
           <label>
             Manifest
-            <textarea rows={12} value={manifestText} onChange={(e) => setManifestText(e.target.value)} />
+            <textarea
+              rows={12}
+              value={manifestText}
+              onChange={(e) => setManifestText(e.target.value)}
+            />
           </label>
           {manifestError ? (
             <div className="notice bad" role="alert">
@@ -87,7 +128,12 @@ export function PineForm({ versionId }: { versionId: string }) {
           ) : null}
           <ProblemInline problem={attach.problem} />
           <div>
-            <button type="button" onClick={() => void submit()} disabled={attach.pending} data-testid="attach-pine">
+            <button
+              type="button"
+              onClick={() => void submit()}
+              disabled={attach.pending}
+              data-testid="attach-pine"
+            >
               Lint and attach revision
             </button>
           </div>

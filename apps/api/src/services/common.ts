@@ -1,5 +1,12 @@
 import { and, eq } from "drizzle-orm";
-import { uuidv7, type AggregateType, type ArtefactKind, type AuditAction, type DomainEventType, type ProtectionLevel } from "@arf/contracts";
+import {
+  uuidv7,
+  type AggregateType,
+  type ArtefactKind,
+  type AuditAction,
+  type DomainEventType,
+  type ProtectionLevel,
+} from "@arf/contracts";
 import { sha256Hex } from "@arf/contracts/node";
 import { appendAudit, artefacts, enqueueOutbox, type DbOrTx } from "@arf/db";
 import type { ObjectStore } from "@arf/storage";
@@ -37,7 +44,13 @@ export async function audit(
 export async function emit(
   tx: DbOrTx,
   scope: RequestScope,
-  input: { eventType: DomainEventType; aggregateType: AggregateType; aggregateId: string; payload: Record<string, unknown>; causationId?: string | null },
+  input: {
+    eventType: DomainEventType;
+    aggregateType: AggregateType;
+    aggregateId: string;
+    payload: Record<string, unknown>;
+    causationId?: string | null;
+  },
 ): Promise<string> {
   return enqueueOutbox(tx, {
     organisationId: scope.principal.organisationId,
@@ -74,7 +87,13 @@ export async function storeArtefact(
   const [existing] = await tx
     .select()
     .from(artefacts)
-    .where(and(eq(artefacts.organisationId, input.organisationId), eq(artefacts.kind, input.kind), eq(artefacts.sha256, sha)))
+    .where(
+      and(
+        eq(artefacts.organisationId, input.organisationId),
+        eq(artefacts.kind, input.kind),
+        eq(artefacts.sha256, sha),
+      ),
+    )
     .limit(1);
   if (existing) return { id: existing.id, sha256: sha, objectKey: existing.objectKey };
   await store.putImmutable(input.key, input.bytes, input.contentType);

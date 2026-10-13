@@ -4,9 +4,33 @@ import type { AgentRole } from "@arf/contracts";
 import type { ModelProvider, StructuredGenerationResult } from "./provider";
 
 export type RunOutcome<T> =
-  | { status: "SUCCEEDED"; output: T; attempts: number; usage: Usage; rawOutputs: string[]; provider: string; model: string }
-  | { status: "FAILED_VALIDATION"; issues: string[]; attempts: number; usage: Usage; rawOutputs: string[]; provider: string; model: string }
-  | { status: "FAILED_PROVIDER"; errorCode: string; attempts: number; usage: Usage; rawOutputs: string[]; provider: string; model: string };
+  | {
+      status: "SUCCEEDED";
+      output: T;
+      attempts: number;
+      usage: Usage;
+      rawOutputs: string[];
+      provider: string;
+      model: string;
+    }
+  | {
+      status: "FAILED_VALIDATION";
+      issues: string[];
+      attempts: number;
+      usage: Usage;
+      rawOutputs: string[];
+      provider: string;
+      model: string;
+    }
+  | {
+      status: "FAILED_PROVIDER";
+      errorCode: string;
+      attempts: number;
+      usage: Usage;
+      rawOutputs: string[];
+      provider: string;
+      model: string;
+    };
 
 export interface Usage {
   inputTokens: number;
@@ -21,7 +45,10 @@ export function wrapUntrusted(source: string, content: string): string {
 }
 
 function parseJson(text: string): { ok: true; value: unknown } | { ok: false; issue: string } {
-  const trimmed = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/```$/, "");
+  const trimmed = text
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/```$/, "");
   try {
     return { ok: true, value: JSON.parse(trimmed) as unknown };
   } catch {
@@ -58,13 +85,24 @@ export async function runStructured<TInput, TOutput>(args: {
           ? {
               repair: [
                 { role: "assistant" as const, content: rawOutputs.at(-1) ?? "" },
-                { role: "user" as const, content: `Your output failed validation. Return corrected JSON only. Errors:\n${issues.join("\n")}` },
+                {
+                  role: "user" as const,
+                  content: `Your output failed validation. Return corrected JSON only. Errors:\n${issues.join("\n")}`,
+                },
               ],
             }
           : {}),
       });
     } catch {
-      return { status: "FAILED_PROVIDER", errorCode: "PROVIDER_ERROR", attempts: attempt, usage, rawOutputs, provider, model };
+      return {
+        status: "FAILED_PROVIDER",
+        errorCode: "PROVIDER_ERROR",
+        attempts: attempt,
+        usage,
+        rawOutputs,
+        provider,
+        model,
+      };
     }
     provider = result.provider;
     model = result.model;
@@ -79,9 +117,19 @@ export async function runStructured<TInput, TOutput>(args: {
     }
     const validated = args.outputSchema.safeParse(parsed.value);
     if (validated.success) {
-      return { status: "SUCCEEDED", output: validated.data, attempts: attempt, usage, rawOutputs, provider, model };
+      return {
+        status: "SUCCEEDED",
+        output: validated.data,
+        attempts: attempt,
+        usage,
+        rawOutputs,
+        provider,
+        model,
+      };
     }
-    issues = validated.error.issues.map((i) => `${i.path.map(String).join(".") || "(root)"}: ${i.message}`);
+    issues = validated.error.issues.map(
+      (i) => `${i.path.map(String).join(".") || "(root)"}: ${i.message}`,
+    );
   }
   return { status: "FAILED_VALIDATION", issues, attempts: 2, usage, rawOutputs, provider, model };
 }

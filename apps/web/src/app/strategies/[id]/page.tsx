@@ -26,7 +26,9 @@ export default async function StrategyPage({ params }: { params: Promise<{ id: s
         <section className="card">
           <h2>Immutable versions</h2>
           {versions.length === 0 ? (
-            <EmptyState title="No versions yet">Create the root version to attach a definition and Pine source.</EmptyState>
+            <EmptyState title="No versions yet">
+              Create the root version to attach a definition and Pine source.
+            </EmptyState>
           ) : (
             <table>
               <thead>
@@ -63,7 +65,15 @@ export default async function StrategyPage({ params }: { params: Promise<{ id: s
             </table>
           )}
         </section>
-        <CreateVersion strategyId={strategy.id} parents={versions.map((v) => ({ id: v.id, label: `v${v.versionNumber}`, symbol: v.symbol, timeframe: v.timeframe }))} />
+        <CreateVersion
+          strategyId={strategy.id}
+          parents={versions.map((v) => ({
+            id: v.id,
+            label: `v${v.versionNumber}`,
+            symbol: v.symbol,
+            timeframe: v.timeframe,
+          }))}
+        />
       </div>
     </div>
   );

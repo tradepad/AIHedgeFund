@@ -2,7 +2,13 @@ import { z } from "zod";
 import { DecimalStringSchema, Sha256HexSchema, UtcTimestampSchema } from "./common";
 import { AuditEventSchema } from "./audit";
 import { DecisionSchema, EvidenceSnapshotSchema } from "./decision";
-import { JobStatusSchema, RunnerTypeSchema, VerificationStatusSchema, WorkflowStateSchema, ActorTypeSchema } from "./enums";
+import {
+  JobStatusSchema,
+  RunnerTypeSchema,
+  VerificationStatusSchema,
+  WorkflowStateSchema,
+  ActorTypeSchema,
+} from "./enums";
 import { PineLintResultSchema, PineManifestSchema } from "./pine";
 import { StrategyLibraryRowSchema, StrategySchema, StrategyVersionSchema } from "./strategy";
 
@@ -16,7 +22,14 @@ export const CommandCentreViewSchema = z.object({
   activeCampaigns: z.number().int(),
   versionCountsByState: z.record(z.string(), z.number().int()),
   awaitingDecision: z.array(StrategyLibraryRowSchema),
-  openVerifications: z.array(z.object({ id: z.uuid(), strategyVersionId: z.uuid(), status: VerificationStatusSchema, updatedAt: UtcTimestampSchema })),
+  openVerifications: z.array(
+    z.object({
+      id: z.uuid(),
+      strategyVersionId: z.uuid(),
+      status: VerificationStatusSchema,
+      updatedAt: UtcTimestampSchema,
+    }),
+  ),
   failedJobs: z.array(
     z.object({
       jobKey: z.string(),
@@ -32,7 +45,10 @@ export const CommandCentreViewSchema = z.object({
 });
 export type CommandCentreView = z.infer<typeof CommandCentreViewSchema>;
 
-export const StrategyWithVersionsSchema = z.object({ strategy: StrategySchema, versions: z.array(StrategyVersionSchema) });
+export const StrategyWithVersionsSchema = z.object({
+  strategy: StrategySchema,
+  versions: z.array(StrategyVersionSchema),
+});
 export type StrategyWithVersions = z.infer<typeof StrategyWithVersionsSchema>;
 
 export const PineTemplateViewSchema = z.object({
@@ -100,6 +116,10 @@ export const DecisionContextSchema = z.object({
 });
 export type DecisionContext = z.infer<typeof DecisionContextSchema>;
 
-export const AuditChainStatusSchema = z.object({ valid: z.boolean(), brokenAt: z.uuid().nullable(), count: z.number().int() });
+export const AuditChainStatusSchema = z.object({
+  valid: z.boolean(),
+  brokenAt: z.uuid().nullable(),
+  count: z.number().int(),
+});
 
 export const GenerateIdeaResultSchema = z.object({ taskId: z.uuid(), agentRunId: z.uuid() });

@@ -17,9 +17,15 @@ export interface EquityTradeInput {
  * excursions are not observable from the trade list, so this drawdown is a
  * lower bound on TradingView's intrabar drawdown.
  */
-export function reconstructEquity(initialCapital: string, trades: readonly EquityTradeInput[]): { equity: EquityPoint[]; drawdown: DrawdownPoint[] } {
+export function reconstructEquity(
+  initialCapital: string,
+  trades: readonly EquityTradeInput[],
+): { equity: EquityPoint[]; drawdown: DrawdownPoint[] } {
   const ordered = sortByExit(trades);
-  const first = ordered.reduce<string | null>((min, t) => (min === null || t.entryTime < min ? t.entryTime : min), null);
+  const first = ordered.reduce<string | null>(
+    (min, t) => (min === null || t.entryTime < min ? t.entryTime : min),
+    null,
+  );
   const capital = new D(initialCapital);
   if (capital.lte(0)) throw new Error("initial capital must be positive");
   const equity: EquityPoint[] = [];

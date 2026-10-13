@@ -12,7 +12,13 @@ const trade = (n: number, calc: string, reported: string | null) => ({
   calcNetPnl: calc,
 });
 const base = (): ParityInput => ({
-  expected: { pineSourceHash: hash, currency: "USDT", initialCapital: "10000", windowStartUtc: "2024-01-01T00:00:00Z", windowEndUtc: "2024-02-01T00:00:00Z" },
+  expected: {
+    pineSourceHash: hash,
+    currency: "USDT",
+    initialCapital: "10000",
+    windowStartUtc: "2024-01-01T00:00:00Z",
+    windowEndUtc: "2024-02-01T00:00:00Z",
+  },
   observed: {
     attestedPineSourceHashes: [hash, hash],
     reportCurrencies: ["USDT", "USDT"],
@@ -46,7 +52,10 @@ describe("parity", () => {
   it("fails on trade count mismatch", () => {
     const input = base();
     input.observed.reportedClosedTrades = "3";
-    expect(computeParity(input)).toMatchObject({ status: "FAIL", firstDivergence: { check: "TRADE_COUNT" } });
+    expect(computeParity(input)).toMatchObject({
+      status: "FAIL",
+      firstDivergence: { check: "TRADE_COUNT" },
+    });
   });
 
   it("names the first trade whose P&L cannot be reproduced", () => {
@@ -60,7 +69,10 @@ describe("parity", () => {
   it("warns, not fails, when ARF closed-trade drawdown is below TradingView intrabar drawdown", () => {
     const input = base();
     input.observed.reportedMaxDrawdown = "8";
-    expect(computeParity(input)).toMatchObject({ status: "WARN", firstDivergence: { check: "MAX_DRAWDOWN", status: "WARN" } });
+    expect(computeParity(input)).toMatchObject({
+      status: "WARN",
+      firstDivergence: { check: "MAX_DRAWDOWN", status: "WARN" },
+    });
   });
 
   it("fails when ARF drawdown exceeds TradingView's, which is impossible", () => {
@@ -78,13 +90,19 @@ describe("parity", () => {
   it("fails when trades fall outside the verification window", () => {
     const input = base();
     input.expected.windowStartUtc = "2024-01-02T00:00:00Z";
-    expect(computeParity(input)).toMatchObject({ status: "FAIL", firstDivergence: { check: "FIRST_TRADE" } });
+    expect(computeParity(input)).toMatchObject({
+      status: "FAIL",
+      firstDivergence: { check: "FIRST_TRADE" },
+    });
   });
 
   it("fails on currency or capital mismatch", () => {
     const input = base();
     input.observed.reportedInitialCapital = "5000";
-    expect(computeParity(input)).toMatchObject({ status: "FAIL", firstDivergence: { check: "SETTINGS_IDENTITY" } });
+    expect(computeParity(input)).toMatchObject({
+      status: "FAIL",
+      firstDivergence: { check: "SETTINGS_IDENTITY" },
+    });
   });
 
   it("classifies net profit differences by tolerance band", () => {

@@ -89,7 +89,11 @@ export default async function CommandCentre() {
                       <Link href={`/verifications/${x.id}`}>{x.id.slice(0, 13)}…</Link>
                     </td>
                     <td>
-                      <span className={`badge ${x.status === "PARSE_FAILED" ? "tone-bad" : "tone-warn"}`}>{x.status.replace(/_/g, " ").toLowerCase()}</span>
+                      <span
+                        className={`badge ${x.status === "PARSE_FAILED" ? "tone-bad" : "tone-warn"}`}
+                      >
+                        {x.status.replace(/_/g, " ").toLowerCase()}
+                      </span>
                     </td>
                     <td>
                       <Utc value={x.updatedAt} />
@@ -113,7 +117,11 @@ export default async function CommandCentre() {
                     <td>
                       <span className="badge tone-bad">{j.lastErrorCode ?? j.status}</span>
                     </td>
-                    <td>{j.verificationId ? <Link href={`/verifications/${j.verificationId}`}>verification</Link> : null}</td>
+                    <td>
+                      {j.verificationId ? (
+                        <Link href={`/verifications/${j.verificationId}`}>verification</Link>
+                      ) : null}
+                    </td>
                   </tr>
                 ))}
               </tbody>

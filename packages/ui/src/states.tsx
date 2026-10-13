@@ -9,7 +9,15 @@ export function EmptyState({ title, children }: { title: string; children?: Reac
   );
 }
 
-export function ErrorState({ title = "Something went wrong", detail, traceId }: { title?: string; detail: string; traceId?: string | null }) {
+export function ErrorState({
+  title = "Something went wrong",
+  detail,
+  traceId,
+}: {
+  title?: string;
+  detail: string;
+  traceId?: string | null;
+}) {
   return (
     <div className="state state-error" role="alert">
       <strong>{title}</strong>

@@ -8,7 +8,15 @@ export const API_URL = process.env.ARF_API_URL ?? "http://127.0.0.1:4000";
 export type ApiResult<T> = { ok: true; data: T } | { ok: false; problem: ProblemDetails };
 
 function problem(status: number, detail: string): ProblemDetails {
-  return { type: "about:blank", title: "Request failed", status, detail, instance: "", code: "WEB_REQUEST_FAILED", traceId: "" };
+  return {
+    type: "about:blank",
+    title: "Request failed",
+    status,
+    detail,
+    instance: "",
+    code: "WEB_REQUEST_FAILED",
+    traceId: "",
+  };
 }
 
 /**
@@ -28,9 +36,13 @@ export async function apiGet<T>(path: string, schema: z.ZodType<T>): Promise<Api
   const body: unknown = await res.json().catch(() => null);
   if (!res.ok) {
     const parsed = ProblemDetailsSchema.safeParse(body);
-    return { ok: false, problem: parsed.success ? parsed.data : problem(res.status, "unexpected API response") };
+    return {
+      ok: false,
+      problem: parsed.success ? parsed.data : problem(res.status, "unexpected API response"),
+    };
   }
   const data = schema.safeParse(body);
-  if (!data.success) return { ok: false, problem: problem(502, "the API response did not match its contract") };
+  if (!data.success)
+    return { ok: false, problem: problem(502, "the API response did not match its contract") };
   return { ok: true, data: data.data };
 }

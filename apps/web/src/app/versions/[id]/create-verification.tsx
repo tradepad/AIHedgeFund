@@ -27,9 +27,16 @@ export function CreateVerification({ versionId }: { versionId: string }) {
     if (created) router.push(`/verifications/${created.id}`);
   }
   return (
-    <form className="card stack" onSubmit={(e) => void onSubmit(e)} aria-label="Create verification">
+    <form
+      className="card stack"
+      onSubmit={(e) => void onSubmit(e)}
+      aria-label="Create verification"
+    >
       <h2>Create TradingView verification</h2>
-      <p className="muted">Human-assisted: you run the Pine source in TradingView with the settings shown on the next screen and upload the CSV exports. No browser automation is used.</p>
+      <p className="muted">
+        Human-assisted: you run the Pine source in TradingView with the settings shown on the next
+        screen and upload the CSV exports. No browser automation is used.
+      </p>
       <label>
         Chart timezone (IANA, as set in TradingView)
         <input name="chartTimezone" required defaultValue="Etc/UTC" />

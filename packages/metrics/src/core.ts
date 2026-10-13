@@ -32,7 +32,12 @@ const defined = (name: MetricName, unit: MetricUnit, value: Dec, periodKey = "")
   undefinedReason: null,
 });
 
-const undefinedMetric = (name: MetricName, unit: MetricUnit, reason: string, periodKey = ""): MetricValue => ({
+const undefinedMetric = (
+  name: MetricName,
+  unit: MetricUnit,
+  reason: string,
+  periodKey = "",
+): MetricValue => ({
   name,
   periodKey,
   unit,
@@ -91,16 +96,32 @@ export function computeCoreMetrics(input: {
       out.push(undefinedMetric(name, unit, "NO_CLOSED_TRADES"));
     }
   } else {
-    out.push(grossLoss.isZero() ? undefinedMetric("profit_factor", "RATIO", "NO_LOSING_TRADES") : defined("profit_factor", "RATIO", grossProfit.div(grossLoss)));
+    out.push(
+      grossLoss.isZero()
+        ? undefinedMetric("profit_factor", "RATIO", "NO_LOSING_TRADES")
+        : defined("profit_factor", "RATIO", grossProfit.div(grossLoss)),
+    );
     out.push(defined("win_rate_pct", "PERCENT_POINTS", new D(winners.length).div(n).times(100)));
     const avgWin = winners.length > 0 ? grossProfit.div(winners.length) : null;
     const avgLoss = losers.length > 0 ? grossLoss.div(losers.length) : null;
-    out.push(avgWin ? defined("average_win", "CURRENCY", avgWin) : undefinedMetric("average_win", "CURRENCY", "NO_WINNING_TRADES"));
-    out.push(avgLoss ? defined("average_loss", "CURRENCY", avgLoss) : undefinedMetric("average_loss", "CURRENCY", "NO_LOSING_TRADES"));
+    out.push(
+      avgWin
+        ? defined("average_win", "CURRENCY", avgWin)
+        : undefinedMetric("average_win", "CURRENCY", "NO_WINNING_TRADES"),
+    );
+    out.push(
+      avgLoss
+        ? defined("average_loss", "CURRENCY", avgLoss)
+        : undefinedMetric("average_loss", "CURRENCY", "NO_LOSING_TRADES"),
+    );
     out.push(
       avgWin && avgLoss
         ? defined("payoff_ratio", "RATIO", avgWin.div(avgLoss))
-        : undefinedMetric("payoff_ratio", "RATIO", avgWin ? "NO_LOSING_TRADES" : "NO_WINNING_TRADES"),
+        : undefinedMetric(
+            "payoff_ratio",
+            "RATIO",
+            avgWin ? "NO_LOSING_TRADES" : "NO_WINNING_TRADES",
+          ),
     );
     const holding = trades.reduce((a, t) => a.plus(t.holdingSeconds), new D(0));
     out.push(defined("average_holding_seconds", "SECONDS", holding.div(n)));
@@ -140,12 +161,17 @@ function nextMonth(key: string): string {
 
 function monthlyReturns(capital: Dec, trades: readonly MetricTradeInput[]): MetricValue[] {
   if (trades.length === 0) return [];
-  const firstEntry = trades.reduce((m, t) => (t.entryTime < m ? t.entryTime : m), trades[0]?.entryTime ?? "");
+  const firstEntry = trades.reduce(
+    (m, t) => (t.entryTime < m ? t.entryTime : m),
+    trades[0]?.entryTime ?? "",
+  );
   const lastExit = trades.reduce((m, t) => (t.exitTime > m ? t.exitTime : m), "");
   const out: MetricValue[] = [];
   let equity = capital;
   for (let key = monthKey(firstEntry); key <= monthKey(lastExit); key = nextMonth(key)) {
-    const pnl = trades.filter((t) => monthKey(t.exitTime) === key).reduce((a, t) => a.plus(t.calcNetPnl), new D(0));
+    const pnl = trades
+      .filter((t) => monthKey(t.exitTime) === key)
+      .reduce((a, t) => a.plus(t.calcNetPnl), new D(0));
     out.push(
       equity.lte(0)
         ? undefinedMetric("monthly_return_pct", "PERCENT_POINTS", "NON_POSITIVE_START_EQUITY", key)

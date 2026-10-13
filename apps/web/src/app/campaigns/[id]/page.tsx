@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { z } from "zod";
-import { CampaignSummarySchema, IdeaCardRecordSchema, ResearchTaskSchema, StrategyLibraryRowSchema, exampleIdeaCard, pageOf } from "@arf/contracts";
+import {
+  CampaignSummarySchema,
+  IdeaCardRecordSchema,
+  ResearchTaskSchema,
+  StrategyLibraryRowSchema,
+  exampleIdeaCard,
+  pageOf,
+} from "@arf/contracts";
 import { EmptyState, ParityBadge, StateBadge } from "@arf/ui";
 import { ProblemView } from "@/components/problem";
 import { Utc } from "@/components/time";
@@ -114,7 +121,13 @@ export default async function CampaignDetail({ params }: { params: Promise<{ id:
                     {/* Model text is rendered as plain text, never as HTML or markdown. */}
                     <div className="muted">{i.ideaCard.hypothesis}</div>
                   </td>
-                  <td>{i.agentRunId ? <span className="badge tone-info">IDEA_SCOUT model</span> : <span className="badge">human</span>}</td>
+                  <td>
+                    {i.agentRunId ? (
+                      <span className="badge tone-info">IDEA_SCOUT model</span>
+                    ) : (
+                      <span className="badge">human</span>
+                    )}
+                  </td>
                   <td>{i.ideaCard.pineFeasibility}</td>
                   <td>{i.ideaCard.evidenceStrength}</td>
                   <td>{i.ideaCard.recommendation}</td>
@@ -125,7 +138,11 @@ export default async function CampaignDetail({ params }: { params: Promise<{ id:
         )}
       </section>
 
-      <CampaignActions campaignId={id} ideas={ideas.ok ? ideas.data.items.map((i) => ({ id: i.id, title: i.ideaCard.title })) : []} ideaTemplate={JSON.stringify(exampleIdeaCard, null, 2)} />
+      <CampaignActions
+        campaignId={id}
+        ideas={ideas.ok ? ideas.data.items.map((i) => ({ id: i.id, title: i.ideaCard.title })) : []}
+        ideaTemplate={JSON.stringify(exampleIdeaCard, null, 2)}
+      />
     </div>
   );
 }

@@ -10,11 +10,26 @@ import { PineManifestSchema } from "./pine";
  * these definitions (`pnpm schemas:generate`) and a test fails if they drift.
  */
 export const publishedJsonSchemas = {
-  "strategy-definition.schema.json": { id: "https://arf-os.dev/schemas/strategy-definition/1.0.0", schema: StrategyDefinitionSchema },
-  "agent-handoff.schema.json": { id: "https://arf-os.dev/schemas/agent-handoff/1.0.0", schema: HandoffSchema },
-  "signal-event.schema.json": { id: "https://arf-os.dev/schemas/signal-event/1.0.0", schema: SignalEventSchema },
-  "idea-card.schema.json": { id: "https://arf-os.dev/schemas/idea-card/1.0.0", schema: IdeaCardSchema },
-  "pine-manifest.schema.json": { id: "https://arf-os.dev/schemas/pine-manifest/1.0.0", schema: PineManifestSchema },
+  "strategy-definition.schema.json": {
+    id: "https://arf-os.dev/schemas/strategy-definition/1.0.0",
+    schema: StrategyDefinitionSchema,
+  },
+  "agent-handoff.schema.json": {
+    id: "https://arf-os.dev/schemas/agent-handoff/1.0.0",
+    schema: HandoffSchema,
+  },
+  "signal-event.schema.json": {
+    id: "https://arf-os.dev/schemas/signal-event/1.0.0",
+    schema: SignalEventSchema,
+  },
+  "idea-card.schema.json": {
+    id: "https://arf-os.dev/schemas/idea-card/1.0.0",
+    schema: IdeaCardSchema,
+  },
+  "pine-manifest.schema.json": {
+    id: "https://arf-os.dev/schemas/pine-manifest/1.0.0",
+    schema: PineManifestSchema,
+  },
 } as const;
 
 export function renderJsonSchema(name: keyof typeof publishedJsonSchemas): string {

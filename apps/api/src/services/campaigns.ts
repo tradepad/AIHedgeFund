@@ -12,7 +12,16 @@ import {
 } from "@arf/contracts";
 import { sha256Hex } from "@arf/contracts/node";
 import { loadApprovedPrompt } from "@arf/agent-runtime";
-import { agentRuns, campaigns, ideaCards, researchTasks, strategies, strategyVersions, type DbOrTx, type Tx } from "@arf/db";
+import {
+  agentRuns,
+  campaigns,
+  ideaCards,
+  researchTasks,
+  strategies,
+  strategyVersions,
+  type DbOrTx,
+  type Tx,
+} from "@arf/db";
 import { objectPaths } from "@arf/storage";
 import type { AppContext, RequestScope } from "../context";
 import { problems } from "../http/problem";
@@ -33,7 +42,12 @@ export function toCampaign(row: typeof campaigns.$inferSelect): Campaign {
   };
 }
 
-export async function loadCampaign(db: DbOrTx, scope: RequestScope, id: string, lock = false): Promise<typeof campaigns.$inferSelect> {
+export async function loadCampaign(
+  db: DbOrTx,
+  scope: RequestScope,
+  id: string,
+  lock = false,
+): Promise<typeof campaigns.$inferSelect> {
   const q = db
     .select()
     .from(campaigns)
@@ -43,7 +57,11 @@ export async function loadCampaign(db: DbOrTx, scope: RequestScope, id: string, 
   return row;
 }
 
-export async function createCampaign(tx: Tx, scope: RequestScope, body: CreateCampaignRequest): Promise<Campaign> {
+export async function createCampaign(
+  tx: Tx,
+  scope: RequestScope,
+  body: CreateCampaignRequest,
+): Promise<Campaign> {
   const id = uuidv7();
   const [row] = await tx
     .insert(campaigns)
@@ -58,28 +76,58 @@ export async function createCampaign(tx: Tx, scope: RequestScope, body: CreateCa
     })
     .returning();
   if (!row) throw new Error("campaign insert returned no row");
-  await audit(tx, scope, { action: "CAMPAIGN_CREATED", aggregateType: "CAMPAIGN", aggregateId: id, newState: { name: body.name, status: "ACTIVE" }, reason: "campaign created" });
-  await emit(tx, scope, { eventType: "campaign.created", aggregateType: "CAMPAIGN", aggregateId: id, payload: { campaignId: id } });
+  await audit(tx, scope, {
+    action: "CAMPAIGN_CREATED",
+    aggregateType: "CAMPAIGN",
+    aggregateId: id,
+    newState: { name: body.name, status: "ACTIVE" },
+    reason: "campaign created",
+  });
+  await emit(tx, scope, {
+    eventType: "campaign.created",
+    aggregateType: "CAMPAIGN",
+    aggregateId: id,
+    payload: { campaignId: id },
+  });
   return toCampaign(row);
 }
 
-export async function listCampaigns(ctx: AppContext, scope: RequestScope, q: { cursor?: string | undefined; limit: number }) {
+export async function listCampaigns(
+  ctx: AppContext,
+  scope: RequestScope,
+  q: { cursor?: string | undefined; limit: number },
+) {
   const cursor = decodeCursor(IdCursor, q.cursor);
   const rows = await ctx.db
     .select()
     .from(campaigns)
-    .where(and(eq(campaigns.organisationId, scope.principal.organisationId), cursor ? lt(campaigns.id, cursor.id) : undefined))
+    .where(
+      and(
+        eq(campaigns.organisationId, scope.principal.organisationId),
+        cursor ? lt(campaigns.id, cursor.id) : undefined,
+      ),
+    )
     .orderBy(desc(campaigns.id))
     .limit(q.limit + 1);
   const p = page(rows, q.limit, (r) => ({ id: r.id }));
   return { items: p.items.map(toCampaign), nextCursor: p.nextCursor };
 }
 
-export async function getCampaignSummary(ctx: AppContext, scope: RequestScope, id: string): Promise<CampaignSummary> {
+export async function getCampaignSummary(
+  ctx: AppContext,
+  scope: RequestScope,
+  id: string,
+): Promise<CampaignSummary> {
   const row = await loadCampaign(ctx.db, scope, id);
   const org = scope.principal.organisationId;
-  const [strategyCount] = await ctx.db.select({ n: count() }).from(strategies).where(and(eq(strategies.organisationId, org), eq(strategies.campaignId, id)));
-  const [taskCount] = await ctx.db.select({ n: count() }).from(researchTasks).where(and(eq(researchTasks.organisationId, org), eq(researchTasks.campaignId, id)));
+  const [strategyCount] = await ctx.db
+    .select({ n: count() })
+    .from(strategies)
+    .where(and(eq(strategies.organisationId, org), eq(strategies.campaignId, id)));
+  const [taskCount] = await ctx.db
+    .select({ n: count() })
+    .from(researchTasks)
+    .where(and(eq(researchTasks.organisationId, org), eq(researchTasks.campaignId, id)));
   const byState = await ctx.db
     .select({ state: strategyVersions.state, n: count() })
     .from(strategyVersions)
@@ -95,15 +143,32 @@ export async function getCampaignSummary(ctx: AppContext, scope: RequestScope, i
 }
 
 export function toTask(row: typeof researchTasks.$inferSelect): ResearchTask {
-  return { id: row.id, campaignId: row.campaignId, role: row.role, title: row.title, state: row.state, createdAt: iso(row.createdAt), updatedAt: iso(row.updatedAt) };
+  return {
+    id: row.id,
+    campaignId: row.campaignId,
+    role: row.role,
+    title: row.title,
+    state: row.state,
+    createdAt: iso(row.createdAt),
+    updatedAt: iso(row.updatedAt),
+  };
 }
 
-export async function listTasks(ctx: AppContext, scope: RequestScope, campaignId: string): Promise<ResearchTask[]> {
+export async function listTasks(
+  ctx: AppContext,
+  scope: RequestScope,
+  campaignId: string,
+): Promise<ResearchTask[]> {
   await loadCampaign(ctx.db, scope, campaignId);
   const rows = await ctx.db
     .select()
     .from(researchTasks)
-    .where(and(eq(researchTasks.organisationId, scope.principal.organisationId), eq(researchTasks.campaignId, campaignId)))
+    .where(
+      and(
+        eq(researchTasks.organisationId, scope.principal.organisationId),
+        eq(researchTasks.campaignId, campaignId),
+      ),
+    )
     .orderBy(desc(researchTasks.id))
     .limit(200);
   return rows.map(toTask);
@@ -121,17 +186,30 @@ export function toIdeaRecord(row: typeof ideaCards.$inferSelect): IdeaCardRecord
   };
 }
 
-export async function listIdeas(ctx: AppContext, scope: RequestScope, campaignId: string): Promise<IdeaCardRecord[]> {
+export async function listIdeas(
+  ctx: AppContext,
+  scope: RequestScope,
+  campaignId: string,
+): Promise<IdeaCardRecord[]> {
   await loadCampaign(ctx.db, scope, campaignId);
   const rows = await ctx.db
     .select()
     .from(ideaCards)
-    .where(and(eq(ideaCards.organisationId, scope.principal.organisationId), eq(ideaCards.campaignId, campaignId)))
+    .where(
+      and(
+        eq(ideaCards.organisationId, scope.principal.organisationId),
+        eq(ideaCards.campaignId, campaignId),
+      ),
+    )
     .orderBy(desc(ideaCards.id));
   return rows.map(toIdeaRecord);
 }
 
-export async function getIdea(ctx: AppContext, scope: RequestScope, id: string): Promise<IdeaCardRecord> {
+export async function getIdea(
+  ctx: AppContext,
+  scope: RequestScope,
+  id: string,
+): Promise<IdeaCardRecord> {
   const [row] = await ctx.db
     .select()
     .from(ideaCards)
@@ -140,7 +218,13 @@ export async function getIdea(ctx: AppContext, scope: RequestScope, id: string):
   return toIdeaRecord(row);
 }
 
-async function createTask(tx: Tx, scope: RequestScope, campaignId: string, title: string, input: Record<string, unknown>): Promise<string> {
+async function createTask(
+  tx: Tx,
+  scope: RequestScope,
+  campaignId: string,
+  title: string,
+  input: Record<string, unknown>,
+): Promise<string> {
   const taskId = uuidv7();
   await tx.insert(researchTasks).values({
     id: taskId,
@@ -152,15 +236,34 @@ async function createTask(tx: Tx, scope: RequestScope, campaignId: string, title
     input,
     createdBy: scope.principal.userId,
   });
-  await audit(tx, scope, { action: "RESEARCH_TASK_CREATED", aggregateType: "RESEARCH_TASK", aggregateId: taskId, newState: { state: "CAMPAIGN_BACKLOG", role: "IDEA_SCOUT" }, reason: title });
-  await emit(tx, scope, { eventType: "research_task.created", aggregateType: "RESEARCH_TASK", aggregateId: taskId, payload: { taskId, campaignId } });
+  await audit(tx, scope, {
+    action: "RESEARCH_TASK_CREATED",
+    aggregateType: "RESEARCH_TASK",
+    aggregateId: taskId,
+    newState: { state: "CAMPAIGN_BACKLOG", role: "IDEA_SCOUT" },
+    reason: title,
+  });
+  await emit(tx, scope, {
+    eventType: "research_task.created",
+    aggregateType: "RESEARCH_TASK",
+    aggregateId: taskId,
+    payload: { taskId, campaignId },
+  });
   return taskId;
 }
 
 /** Store a structured Idea Card supplied by a human (validated by the route) and move its task to HYPOTHESIS_DRAFT. */
-export async function ingestIdeaCard(ctx: AppContext, tx: Tx, scope: RequestScope, campaignId: string, card: IdeaCard, key: string): Promise<IdeaCardRecord> {
+export async function ingestIdeaCard(
+  ctx: AppContext,
+  tx: Tx,
+  scope: RequestScope,
+  campaignId: string,
+  card: IdeaCard,
+  key: string,
+): Promise<IdeaCardRecord> {
   const campaign = await loadCampaign(tx, scope, campaignId);
-  if (campaign.status !== "ACTIVE") throw problems.conflict("CAMPAIGN_NOT_ACTIVE", "ideas can only be added to active campaigns");
+  if (campaign.status !== "ACTIVE")
+    throw problems.conflict("CAMPAIGN_NOT_ACTIVE", "ideas can only be added to active campaigns");
   const taskId = await createTask(tx, scope, campaignId, card.title, { source: "MANUAL" });
   await applyTransition(ctx, tx, scope, {
     aggregate: "RESEARCH_TASK",
@@ -184,10 +287,26 @@ export async function ingestIdeaCard(ctx: AppContext, tx: Tx, scope: RequestScop
   const id = uuidv7();
   const [row] = await tx
     .insert(ideaCards)
-    .values({ id, organisationId: scope.principal.organisationId, campaignId, taskId, agentRunId: null, artefactId: artefact.id, title: card.title, recommendation: card.recommendation, content: card })
+    .values({
+      id,
+      organisationId: scope.principal.organisationId,
+      campaignId,
+      taskId,
+      agentRunId: null,
+      artefactId: artefact.id,
+      title: card.title,
+      recommendation: card.recommendation,
+      content: card,
+    })
     .returning();
   if (!row) throw new Error("idea card insert returned no row");
-  await audit(tx, scope, { action: "IDEA_CARD_CREATED", aggregateType: "IDEA_CARD", aggregateId: id, newState: { taskId, recommendation: card.recommendation, artefactId: artefact.id }, reason: "manual idea card" });
+  await audit(tx, scope, {
+    action: "IDEA_CARD_CREATED",
+    aggregateType: "IDEA_CARD",
+    aggregateId: id,
+    newState: { taskId, recommendation: card.recommendation, artefactId: artefact.id },
+    reason: "manual idea card",
+  });
   await applyTransition(ctx, tx, scope, {
     aggregate: "RESEARCH_TASK",
     aggregateId: taskId,
@@ -215,10 +334,19 @@ export async function requestIdeaGeneration(
   key: string,
 ): Promise<{ taskId: string; agentRunId: string }> {
   const campaign = await loadCampaign(tx, scope, campaignId);
-  if (campaign.status !== "ACTIVE") throw problems.conflict("CAMPAIGN_NOT_ACTIVE", "ideas can only be generated for active campaigns");
+  if (campaign.status !== "ACTIVE")
+    throw problems.conflict(
+      "CAMPAIGN_NOT_ACTIVE",
+      "ideas can only be generated for active campaigns",
+    );
   const prompt = await loadApprovedPrompt(tx, "IDEA_SCOUT");
-  if (!prompt) throw problems.conflict("PROMPT_NOT_APPROVED", "no approved IDEA_SCOUT prompt is registered");
-  const taskId = await createTask(tx, scope, campaignId, `Idea Scout: ${objective.slice(0, 80)}`, { source: "IDEA_SCOUT", objective, campaignObjective: campaign.objective });
+  if (!prompt)
+    throw problems.conflict("PROMPT_NOT_APPROVED", "no approved IDEA_SCOUT prompt is registered");
+  const taskId = await createTask(tx, scope, campaignId, `Idea Scout: ${objective.slice(0, 80)}`, {
+    source: "IDEA_SCOUT",
+    objective,
+    campaignObjective: campaign.objective,
+  });
   await applyTransition(ctx, tx, scope, {
     aggregate: "RESEARCH_TASK",
     aggregateId: taskId,
@@ -241,19 +369,64 @@ export async function requestIdeaGeneration(
     status: "RUNNING",
     idempotencyKey: `agent-run-${taskId}`,
   });
-  await emit(tx, scope, { eventType: "agent_run.requested", aggregateType: "AGENT_RUN", aggregateId: agentRunId, payload: { taskId, agentRunId } });
+  await emit(tx, scope, {
+    eventType: "agent_run.requested",
+    aggregateType: "AGENT_RUN",
+    aggregateId: agentRunId,
+    payload: { taskId, agentRunId },
+  });
   return { taskId, agentRunId };
 }
 
-export async function campaignAggregateIds(db: DbOrTx, scope: RequestScope, campaignId: string): Promise<string[]> {
+export async function campaignAggregateIds(
+  db: DbOrTx,
+  scope: RequestScope,
+  campaignId: string,
+): Promise<string[]> {
   const org = scope.principal.organisationId;
-  const tasks = await db.select({ id: researchTasks.id }).from(researchTasks).where(and(eq(researchTasks.organisationId, org), eq(researchTasks.campaignId, campaignId)));
-  const ideas = await db.select({ id: ideaCards.id }).from(ideaCards).where(and(eq(ideaCards.organisationId, org), eq(ideaCards.campaignId, campaignId)));
-  const strats = await db.select({ id: strategies.id }).from(strategies).where(and(eq(strategies.organisationId, org), eq(strategies.campaignId, campaignId)));
+  const tasks = await db
+    .select({ id: researchTasks.id })
+    .from(researchTasks)
+    .where(and(eq(researchTasks.organisationId, org), eq(researchTasks.campaignId, campaignId)));
+  const ideas = await db
+    .select({ id: ideaCards.id })
+    .from(ideaCards)
+    .where(and(eq(ideaCards.organisationId, org), eq(ideaCards.campaignId, campaignId)));
+  const strats = await db
+    .select({ id: strategies.id })
+    .from(strategies)
+    .where(and(eq(strategies.organisationId, org), eq(strategies.campaignId, campaignId)));
   const versions =
     strats.length === 0
       ? []
-      : await db.select({ id: strategyVersions.id }).from(strategyVersions).where(and(eq(strategyVersions.organisationId, org), inArray(strategyVersions.strategyId, strats.map((s) => s.id))));
-  const runs = tasks.length === 0 ? [] : await db.select({ id: agentRuns.id }).from(agentRuns).where(and(eq(agentRuns.organisationId, org), inArray(agentRuns.taskId, tasks.map((t) => t.id))));
-  return [campaignId, ...tasks, ...ideas, ...strats, ...versions, ...runs].map((x) => (typeof x === "string" ? x : x.id));
+      : await db
+          .select({ id: strategyVersions.id })
+          .from(strategyVersions)
+          .where(
+            and(
+              eq(strategyVersions.organisationId, org),
+              inArray(
+                strategyVersions.strategyId,
+                strats.map((s) => s.id),
+              ),
+            ),
+          );
+  const runs =
+    tasks.length === 0
+      ? []
+      : await db
+          .select({ id: agentRuns.id })
+          .from(agentRuns)
+          .where(
+            and(
+              eq(agentRuns.organisationId, org),
+              inArray(
+                agentRuns.taskId,
+                tasks.map((t) => t.id),
+              ),
+            ),
+          );
+  return [campaignId, ...tasks, ...ideas, ...strats, ...versions, ...runs].map((x) =>
+    typeof x === "string" ? x : x.id,
+  );
 }

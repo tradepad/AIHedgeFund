@@ -15,7 +15,10 @@ function main(): void {
   const env = EnvSchema.parse(process.env);
   const logger = createLogger("worker-forward", { level: env.LOG_LEVEL });
   const server = startHealthServer(env.HEALTH_PORT, "worker-forward", () => Promise.resolve(true));
-  logger.info({ healthPort: env.HEALTH_PORT, capabilities: [] }, "worker-forward started (health only)");
+  logger.info(
+    { healthPort: env.HEALTH_PORT, capabilities: [] },
+    "worker-forward started (health only)",
+  );
   const shutdown = (): void => {
     server.close();
     process.exit(0);

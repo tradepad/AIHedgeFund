@@ -19,7 +19,10 @@ describe("observability", () => {
       },
     });
     const logger = createLogger("test", { destination: sink });
-    logger.info({ headers: { authorization: "Bearer abc" }, auth: { token: "xyz" }, password: "pw1" }, "hello");
+    logger.info(
+      { headers: { authorization: "Bearer abc" }, auth: { token: "xyz" }, password: "pw1" },
+      "hello",
+    );
     expect(lines.join("")).toContain("[REDACTED]");
     expect(lines.join("")).not.toContain("pw1");
     expect(lines.join("")).not.toContain("abc");
@@ -28,6 +31,8 @@ describe("observability", () => {
 
   it("propagates results and errors through spans", async () => {
     await expect(withSpan("ok", {}, () => Promise.resolve(42))).resolves.toBe(42);
-    await expect(withSpan("fail", {}, () => Promise.reject(new Error("boom")))).rejects.toThrow("boom");
+    await expect(withSpan("fail", {}, () => Promise.reject(new Error("boom")))).rejects.toThrow(
+      "boom",
+    );
   });
 });

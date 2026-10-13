@@ -20,9 +20,14 @@ export function registerAuth(app: FastifyInstance, ctx: AppContext): void {
     const verified = await ctx.auth.verify(request.headers.authorization);
     if (!verified.ok) throw problems.unauthenticated(verified.error.detail);
     const org = request.headers["x-arf-org"];
-    const principal = await resolvePrincipal(ctx.db, verified.value, typeof org === "string" ? org : undefined);
+    const principal = await resolvePrincipal(
+      ctx.db,
+      verified.value,
+      typeof org === "string" ? org : undefined,
+    );
     if (!principal.ok) {
-      if (principal.error.code === "ORGANISATION_REQUIRED") throw problems.badRequest(principal.error.code, principal.error.detail);
+      if (principal.error.code === "ORGANISATION_REQUIRED")
+        throw problems.badRequest(principal.error.code, principal.error.detail);
       throw problems.forbidden(principal.error.code, principal.error.detail);
     }
     request.principal = principal.value;
@@ -38,12 +43,18 @@ export function principalOf(request: FastifyRequest): Principal {
 export function authorise(request: FastifyRequest, permission: Permission): RequestScope {
   const principal = principalOf(request);
   if (!hasPermission(principal.roles, permission)) {
-    throw problems.forbidden("PERMISSION_DENIED", `this action requires the ${permission} permission`);
+    throw problems.forbidden(
+      "PERMISSION_DENIED",
+      `this action requires the ${permission} permission`,
+    );
   }
   const correlation = request.headers["x-correlation-id"];
   return {
     principal,
     traceId: request.traceId,
-    correlationId: typeof correlation === "string" && /^[\w-]{1,100}$/.test(correlation) ? correlation : request.traceId,
+    correlationId:
+      typeof correlation === "string" && /^[\w-]{1,100}$/.test(correlation)
+        ? correlation
+        : request.traceId,
   };
 }

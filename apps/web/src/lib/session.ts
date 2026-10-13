@@ -30,7 +30,9 @@ export function authMode(): "dev" | "clerk" {
 export function parseSession(raw: string | undefined): Session | null {
   if (!raw) return null;
   try {
-    const parsed = SessionSchema.safeParse(JSON.parse(Buffer.from(raw, "base64url").toString("utf8")));
+    const parsed = SessionSchema.safeParse(
+      JSON.parse(Buffer.from(raw, "base64url").toString("utf8")),
+    );
     return parsed.success ? parsed.data : null;
   } catch {
     return null;

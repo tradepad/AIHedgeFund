@@ -1,6 +1,19 @@
 import { and, asc, eq, gt } from "drizzle-orm";
-import { MetricNameSchema, type EquitySeries, type MetricSnapshot, type MetricsView, type Trade } from "@arf/contracts";
-import { backtestRuns, drawdownPoints, equityPoints, metricSnapshots, trades, type DbOrTx } from "@arf/db";
+import {
+  MetricNameSchema,
+  type EquitySeries,
+  type MetricSnapshot,
+  type MetricsView,
+  type Trade,
+} from "@arf/contracts";
+import {
+  backtestRuns,
+  drawdownPoints,
+  equityPoints,
+  metricSnapshots,
+  trades,
+  type DbOrTx,
+} from "@arf/db";
 import { EQUITY_CALCULATION_VERSION, METRICS_CALCULATION_VERSION } from "@arf/metrics";
 import type { AppContext, RequestScope } from "../context";
 import { problems } from "../http/problem";
@@ -13,7 +26,9 @@ export async function loadRun(db: DbOrTx, scope: RequestScope, id: string): Prom
   const [row] = await db
     .select()
     .from(backtestRuns)
-    .where(and(eq(backtestRuns.id, id), eq(backtestRuns.organisationId, scope.principal.organisationId)));
+    .where(
+      and(eq(backtestRuns.id, id), eq(backtestRuns.organisationId, scope.principal.organisationId)),
+    );
   if (!row) throw problems.notFound("backtest run");
   return row;
 }
@@ -45,13 +60,20 @@ export async function getRun(ctx: AppContext, scope: RequestScope, id: string) {
   };
 }
 
-export async function listTrades(ctx: AppContext, scope: RequestScope, runId: string, q: { cursor?: string | undefined; limit: number }): Promise<{ items: Trade[]; nextCursor: string | null }> {
+export async function listTrades(
+  ctx: AppContext,
+  scope: RequestScope,
+  runId: string,
+  q: { cursor?: string | undefined; limit: number },
+): Promise<{ items: Trade[]; nextCursor: string | null }> {
   await loadRun(ctx.db, scope, runId);
   const cursor = decodeCursor(TradeCursor, q.cursor);
   const rows = await ctx.db
     .select()
     .from(trades)
-    .where(and(eq(trades.backtestRunId, runId), cursor ? gt(trades.tradeNumber, cursor.n) : undefined))
+    .where(
+      and(eq(trades.backtestRunId, runId), cursor ? gt(trades.tradeNumber, cursor.n) : undefined),
+    )
     .orderBy(asc(trades.tradeNumber))
     .limit(q.limit + 1);
   const p = page(rows, q.limit, (r) => ({ n: r.tradeNumber }));
@@ -78,17 +100,31 @@ export async function listTrades(ctx: AppContext, scope: RequestScope, runId: st
   };
 }
 
-export async function getEquity(ctx: AppContext, scope: RequestScope, runId: string): Promise<EquitySeries> {
+export async function getEquity(
+  ctx: AppContext,
+  scope: RequestScope,
+  runId: string,
+): Promise<EquitySeries> {
   const run = await loadRun(ctx.db, scope, runId);
   const eq_ = await ctx.db
     .select()
     .from(equityPoints)
-    .where(and(eq(equityPoints.backtestRunId, runId), eq(equityPoints.calculationVersion, EQUITY_CALCULATION_VERSION)))
+    .where(
+      and(
+        eq(equityPoints.backtestRunId, runId),
+        eq(equityPoints.calculationVersion, EQUITY_CALCULATION_VERSION),
+      ),
+    )
     .orderBy(asc(equityPoints.seq));
   const dd = await ctx.db
     .select()
     .from(drawdownPoints)
-    .where(and(eq(drawdownPoints.backtestRunId, runId), eq(drawdownPoints.calculationVersion, EQUITY_CALCULATION_VERSION)))
+    .where(
+      and(
+        eq(drawdownPoints.backtestRunId, runId),
+        eq(drawdownPoints.calculationVersion, EQUITY_CALCULATION_VERSION),
+      ),
+    )
     .orderBy(asc(drawdownPoints.seq));
   if (eq_.length === 0) throw problems.notFound("equity series");
   return {
@@ -98,8 +134,19 @@ export async function getEquity(ctx: AppContext, scope: RequestScope, runId: str
     label: "HISTORICAL_SIMULATED",
     currency: run.currency,
     initialCapital: run.initialCapital,
-    equity: eq_.map((p) => ({ seq: p.seq, time: iso(p.time), equity: p.equity, tradeNumber: p.tradeNumber })),
-    drawdown: dd.map((p) => ({ seq: p.seq, time: iso(p.time), peakEquity: p.peakEquity, drawdown: p.drawdown, drawdownPct: p.drawdownPct })),
+    equity: eq_.map((p) => ({
+      seq: p.seq,
+      time: iso(p.time),
+      equity: p.equity,
+      tradeNumber: p.tradeNumber,
+    })),
+    drawdown: dd.map((p) => ({
+      seq: p.seq,
+      time: iso(p.time),
+      peakEquity: p.peakEquity,
+      drawdown: p.drawdown,
+      drawdownPct: p.drawdownPct,
+    })),
   };
 }
 
@@ -121,14 +168,31 @@ function toSnapshot(r: typeof metricSnapshots.$inferSelect): MetricSnapshot {
 }
 
 /** Calculated (ARF) and reported (TradingView) metrics are returned separately and never merged. */
-export async function getMetrics(ctx: AppContext, scope: RequestScope, runId: string): Promise<MetricsView> {
+export async function getMetrics(
+  ctx: AppContext,
+  scope: RequestScope,
+  runId: string,
+): Promise<MetricsView> {
   await loadRun(ctx.db, scope, runId);
   const rows = await ctx.db
     .select()
     .from(metricSnapshots)
-    .where(and(eq(metricSnapshots.organisationId, scope.principal.organisationId), eq(metricSnapshots.scopeType, "RUN"), eq(metricSnapshots.scopeId, runId)))
+    .where(
+      and(
+        eq(metricSnapshots.organisationId, scope.principal.organisationId),
+        eq(metricSnapshots.scopeType, "RUN"),
+        eq(metricSnapshots.scopeId, runId),
+      ),
+    )
     .orderBy(asc(metricSnapshots.metricName), asc(metricSnapshots.periodKey));
-  const calculated = rows.filter((r) => r.source === "ARF_CALCULATED" && r.calculationVersion === METRICS_CALCULATION_VERSION);
+  const calculated = rows.filter(
+    (r) => r.source === "ARF_CALCULATED" && r.calculationVersion === METRICS_CALCULATION_VERSION,
+  );
   const reported = rows.filter((r) => r.source === "TRADINGVIEW_REPORTED");
-  return { backtestRunId: runId, scopeType: "RUN", calculated: calculated.map(toSnapshot), reported: reported.map(toSnapshot) };
+  return {
+    backtestRunId: runId,
+    scopeType: "RUN",
+    calculated: calculated.map(toSnapshot),
+    reported: reported.map(toSnapshot),
+  };
 }

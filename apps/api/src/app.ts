@@ -21,9 +21,13 @@ export async function buildApp(ctx: AppContext): Promise<FastifyInstance> {
   });
 
   // Raw file bodies for the local presigned-upload target only.
-  app.addContentTypeParser(["text/csv", "application/octet-stream", "application/vnd.ms-excel"], { parseAs: "buffer", bodyLimit: MAX_REPORT_UPLOAD_BYTES }, (_req, body, done) => {
-    done(null, body);
-  });
+  app.addContentTypeParser(
+    ["text/csv", "application/octet-stream", "application/vnd.ms-excel"],
+    { parseAs: "buffer", bodyLimit: MAX_REPORT_UPLOAD_BYTES },
+    (_req, body, done) => {
+      done(null, body);
+    },
+  );
 
   app.setErrorHandler(errorHandler(ctx.logger));
   app.setNotFoundHandler((request) => {
@@ -36,22 +40,37 @@ export async function buildApp(ctx: AppContext): Promise<FastifyInstance> {
     global: false,
     keyGenerator: (request) => {
       const auth = request.headers.authorization;
-      return typeof auth === "string" ? createHash("sha256").update(auth).digest("hex") : request.ip;
+      return typeof auth === "string"
+        ? createHash("sha256").update(auth).digest("hex")
+        : request.ip;
     },
   });
 
   registerAuth(app, ctx);
 
   app.addHook("onResponse", async (request, reply) => {
-    instruments.apiLatencyMs.record(reply.elapsedTime, { route: request.routeOptions.url ?? "unknown", status: reply.statusCode });
+    instruments.apiLatencyMs.record(reply.elapsedTime, {
+      route: request.routeOptions.url ?? "unknown",
+      status: reply.statusCode,
+    });
     ctx.logger.info(
-      { traceId: request.traceId, method: request.method, route: request.routeOptions.url, status: reply.statusCode, durationMs: Math.round(reply.elapsedTime), userId: request.principal?.userId, organisationId: request.principal?.organisationId },
+      {
+        traceId: request.traceId,
+        method: request.method,
+        route: request.routeOptions.url,
+        status: reply.statusCode,
+        durationMs: Math.round(reply.elapsedTime),
+        userId: request.principal?.userId,
+        organisationId: request.principal?.organisationId,
+      },
       "request",
     );
     await Promise.resolve();
   });
 
-  app.get("/healthz", { config: { public: true } }, () => Promise.resolve({ status: "ok", service: "api" }));
+  app.get("/healthz", { config: { public: true } }, () =>
+    Promise.resolve({ status: "ok", service: "api" }),
+  );
   app.get("/readyz", { config: { public: true } }, async (_request, reply) => {
     try {
       await ctx.db.execute(sql`select 1`);

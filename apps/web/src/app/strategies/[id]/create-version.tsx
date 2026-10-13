@@ -24,7 +24,11 @@ export function CreateVersion({ strategyId, parents }: { strategyId: string; par
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    const common = { symbol: field(f, "symbol"), timeframe: field(f, "timeframe"), changeReason: field(f, "changeReason") };
+    const common = {
+      symbol: field(f, "symbol"),
+      timeframe: field(f, "timeframe"),
+      changeReason: field(f, "changeReason"),
+    };
     const body = isRoot
       ? { kind: "ROOT", ...common }
       : {
@@ -49,7 +53,10 @@ export function CreateVersion({ strategyId, parents }: { strategyId: string; par
   return (
     <form className="card stack" onSubmit={(e) => void onSubmit(e)} aria-label="Create version">
       <h2>{isRoot ? "Create root version" : "Create child version"}</h2>
-      <p className="muted">Versions are immutable. Any change to source, parameters, market, costs or execution creates a child version with an explicit reason.</p>
+      <p className="muted">
+        Versions are immutable. Any change to source, parameters, market, costs or execution creates
+        a child version with an explicit reason.
+      </p>
       {!isRoot ? (
         <label>
           Parent
@@ -65,16 +72,32 @@ export function CreateVersion({ strategyId, parents }: { strategyId: string; par
       <div className="row">
         <label>
           Symbol (EXCHANGE:TICKER)
-          <input name="symbol" required defaultValue={last?.symbol ?? ""} placeholder="BYBIT:BTCUSDT.P" />
+          <input
+            name="symbol"
+            required
+            defaultValue={last?.symbol ?? ""}
+            placeholder="BYBIT:BTCUSDT.P"
+          />
         </label>
         <label>
           Timeframe
-          <input name="timeframe" required defaultValue={last?.timeframe ?? ""} placeholder="60" size={6} />
+          <input
+            name="timeframe"
+            required
+            defaultValue={last?.timeframe ?? ""}
+            placeholder="60"
+            size={6}
+          />
         </label>
       </div>
       <label>
         Reason
-        <input name="changeReason" required minLength={3} defaultValue={isRoot ? "initial hypothesis" : ""} />
+        <input
+          name="changeReason"
+          required
+          minLength={3}
+          defaultValue={isRoot ? "initial hypothesis" : ""}
+        />
       </label>
       {!isRoot ? (
         <>
@@ -82,7 +105,15 @@ export function CreateVersion({ strategyId, parents }: { strategyId: string; par
             <legend className="muted">Change categories</legend>
             {ChangeCategorySchema.options.map((c) => (
               <label key={c} className="inline">
-                <input type="checkbox" checked={categories.includes(c)} onChange={(e) => setCategories((xs) => (e.target.checked ? [...xs, c] : xs.filter((x) => x !== c)))} />
+                <input
+                  type="checkbox"
+                  checked={categories.includes(c)}
+                  onChange={(e) =>
+                    setCategories((xs) =>
+                      e.target.checked ? [...xs, c] : xs.filter((x) => x !== c),
+                    )
+                  }
+                />
                 {c.toLowerCase()}
               </label>
             ))}

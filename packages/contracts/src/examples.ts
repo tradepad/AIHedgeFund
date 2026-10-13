@@ -64,8 +64,10 @@ export const exampleStrategyDefinition: StrategyDefinition = {
 export const exampleIdeaCard: IdeaCard = {
   schemaVersion: "1.0.0",
   title: "Higher-timeframe trend pullback continuation",
-  hypothesis: "Pullbacks within a confirmed 4h trend resume in the trend direction more often than they reverse.",
-  sourceSummary: "Widely discussed trend-continuation pattern; treated as a hypothesis, not evidence.",
+  hypothesis:
+    "Pullbacks within a confirmed 4h trend resume in the trend direction more often than they reverse.",
+  sourceSummary:
+    "Widely discussed trend-continuation pattern; treated as a hypothesis, not evidence.",
   sources: [],
   marketMechanism: "Trend persistence from slow-moving capital and delayed information diffusion.",
   expectedDirection: "both",
@@ -76,7 +78,8 @@ export const exampleIdeaCard: IdeaCard = {
   requiredInputs: ["OHLC", "EMA", "ATR"],
   pineFeasibility: "HIGH",
   expectedTradeFrequency: "DAILY",
-  cheapestFalsificationTest: "Run the baseline on 2 years of hourly data with costs; reject if net profit is non-positive.",
+  cheapestFalsificationTest:
+    "Run the baseline on 2 years of hourly data with costs; reject if net profit is non-positive.",
   noveltyScore: 0.2,
   evidenceStrength: "ANECDOTAL",
   similarInternalStrategies: [],

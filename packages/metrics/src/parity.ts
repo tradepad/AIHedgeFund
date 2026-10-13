@@ -83,16 +83,38 @@ export function computeParity(input: ParityInput): ParityResult {
   const hashes = observed.attestedPineSourceHashes;
   checks.push(
     hashes.length === 0
-      ? { check: "SOURCE_IDENTITY", status: "INSUFFICIENT_DATA", expected: expected.pineSourceHash, actual: null, tolerance: "exact", detail: "no upload attested a Pine source hash" }
+      ? {
+          check: "SOURCE_IDENTITY",
+          status: "INSUFFICIENT_DATA",
+          expected: expected.pineSourceHash,
+          actual: null,
+          tolerance: "exact",
+          detail: "no upload attested a Pine source hash",
+        }
       : hashes.every((h) => h === expected.pineSourceHash)
-        ? { check: "SOURCE_IDENTITY", status: "PASS", expected: expected.pineSourceHash, actual: expected.pineSourceHash, tolerance: "exact", detail: "all uploads attest the verified Pine source" }
-        : { check: "SOURCE_IDENTITY", status: "FAIL", expected: expected.pineSourceHash, actual: hashes.find((h) => h !== expected.pineSourceHash) ?? null, tolerance: "exact", detail: "an upload attests a different Pine source" },
+        ? {
+            check: "SOURCE_IDENTITY",
+            status: "PASS",
+            expected: expected.pineSourceHash,
+            actual: expected.pineSourceHash,
+            tolerance: "exact",
+            detail: "all uploads attest the verified Pine source",
+          }
+        : {
+            check: "SOURCE_IDENTITY",
+            status: "FAIL",
+            expected: expected.pineSourceHash,
+            actual: hashes.find((h) => h !== expected.pineSourceHash) ?? null,
+            tolerance: "exact",
+            detail: "an upload attests a different Pine source",
+          },
   );
 
   // 2. Settings identity: currency and initial capital where the report states them.
   const currencyMismatch = observed.reportCurrencies.find((c) => c !== expected.currency);
   const capitalMismatch =
-    observed.reportedInitialCapital !== null && !new D(observed.reportedInitialCapital).eq(expected.initialCapital);
+    observed.reportedInitialCapital !== null &&
+    !new D(observed.reportedInitialCapital).eq(expected.initialCapital);
   checks.push(
     currencyMismatch || capitalMismatch
       ? {
@@ -109,7 +131,10 @@ export function computeParity(input: ParityInput): ParityResult {
           expected: `${expected.initialCapital} ${expected.currency}`,
           actual: `${observed.reportedInitialCapital ?? "not reported"} ${expected.currency}`,
           tolerance: "exact",
-          detail: observed.reportedInitialCapital === null ? "initial capital not in export; relying on operator attestation" : "currency and initial capital match",
+          detail:
+            observed.reportedInitialCapital === null
+              ? "initial capital not in export; relying on operator attestation"
+              : "currency and initial capital match",
         },
   );
 
@@ -117,7 +142,14 @@ export function computeParity(input: ParityInput): ParityResult {
   const count = trades.length;
   checks.push(
     observed.reportedClosedTrades === null
-      ? { check: "TRADE_COUNT", status: "INSUFFICIENT_DATA", expected: null, actual: String(count), tolerance: "exact", detail: "summary does not report closed trades" }
+      ? {
+          check: "TRADE_COUNT",
+          status: "INSUFFICIENT_DATA",
+          expected: null,
+          actual: String(count),
+          tolerance: "exact",
+          detail: "summary does not report closed trades",
+        }
       : {
           check: "TRADE_COUNT",
           status: new D(observed.reportedClosedTrades).eq(count) ? "PASS" : "FAIL",
@@ -129,11 +161,21 @@ export function computeParity(input: ParityInput): ParityResult {
   );
 
   // 4. First and last trade fall inside the declared window.
-  const first = trades.reduce<ParityTrade | null>((m, t) => (m === null || t.entryTime < m.entryTime ? t : m), null);
+  const first = trades.reduce<ParityTrade | null>(
+    (m, t) => (m === null || t.entryTime < m.entryTime ? t : m),
+    null,
+  );
   const last = trades.at(-1) ?? null;
   checks.push(
     first === null
-      ? { check: "FIRST_TRADE", status: "INSUFFICIENT_DATA", expected: expected.windowStartUtc, actual: null, tolerance: "inside window", detail: "no closed trades" }
+      ? {
+          check: "FIRST_TRADE",
+          status: "INSUFFICIENT_DATA",
+          expected: expected.windowStartUtc,
+          actual: null,
+          tolerance: "inside window",
+          detail: "no closed trades",
+        }
       : {
           check: "FIRST_TRADE",
           status: first.entryTime >= expected.windowStartUtc ? "PASS" : "FAIL",
@@ -146,11 +188,24 @@ export function computeParity(input: ParityInput): ParityResult {
 
   // 5. Per-trade P&L sequence; report the first divergent trade.
   if (trades.length === 0 || trades.some((t) => t.reportedNetPnl === null)) {
-    checks.push({ check: "TRADE_PNL_SEQUENCE", status: "INSUFFICIENT_DATA", expected: null, actual: null, tolerance: null, detail: "per-trade P&L not reported for every trade" });
+    checks.push({
+      check: "TRADE_PNL_SEQUENCE",
+      status: "INSUFFICIENT_DATA",
+      expected: null,
+      actual: null,
+      tolerance: null,
+      detail: "per-trade P&L not reported for every trade",
+    });
   } else {
     const divergent = trades.find((t) => {
-      const tol = D.max(new D(PARITY_TOLERANCES.tradePnlAbsolute), new D(t.entryPrice).times(t.quantity).times(PARITY_TOLERANCES.tradePnlNotionalFraction));
-      return new D(t.calcNetPnl).minus(t.reportedNetPnl ?? "0").abs().gt(tol);
+      const tol = D.max(
+        new D(PARITY_TOLERANCES.tradePnlAbsolute),
+        new D(t.entryPrice).times(t.quantity).times(PARITY_TOLERANCES.tradePnlNotionalFraction),
+      );
+      return new D(t.calcNetPnl)
+        .minus(t.reportedNetPnl ?? "0")
+        .abs()
+        .gt(tol);
     });
     checks.push(
       divergent
@@ -175,7 +230,14 @@ export function computeParity(input: ParityInput): ParityResult {
 
   checks.push(
     last === null
-      ? { check: "LAST_TRADE", status: "INSUFFICIENT_DATA", expected: expected.windowEndUtc, actual: null, tolerance: "inside window", detail: "no closed trades" }
+      ? {
+          check: "LAST_TRADE",
+          status: "INSUFFICIENT_DATA",
+          expected: expected.windowEndUtc,
+          actual: null,
+          tolerance: "inside window",
+          detail: "no closed trades",
+        }
       : {
           check: "LAST_TRADE",
           status: last.exitTime < expected.windowEndUtc ? "PASS" : "FAIL",
@@ -188,11 +250,21 @@ export function computeParity(input: ParityInput): ParityResult {
 
   // 6. Net profit.
   if (observed.reportedNetProfit === null) {
-    checks.push({ check: "NET_PROFIT", status: "INSUFFICIENT_DATA", expected: null, actual: observed.arfNetProfit, tolerance: null, detail: "summary does not report net profit" });
+    checks.push({
+      check: "NET_PROFIT",
+      status: "INSUFFICIENT_DATA",
+      expected: null,
+      actual: observed.arfNetProfit,
+      tolerance: null,
+      detail: "summary does not report net profit",
+    });
   } else {
     const tv = new D(observed.reportedNetProfit);
     const diff = new D(observed.arfNetProfit).minus(tv).abs();
-    const passTol = D.max(new D(PARITY_TOLERANCES.tradePnlAbsolute).times(Math.max(count, 1)), tv.abs().times(PARITY_TOLERANCES.netProfitRelative));
+    const passTol = D.max(
+      new D(PARITY_TOLERANCES.tradePnlAbsolute).times(Math.max(count, 1)),
+      tv.abs().times(PARITY_TOLERANCES.netProfitRelative),
+    );
     const warnTol = D.max(passTol, tv.abs().times(PARITY_TOLERANCES.netProfitWarnRelative));
     checks.push({
       check: "NET_PROFIT",
@@ -206,12 +278,23 @@ export function computeParity(input: ParityInput): ParityResult {
 
   // 7. Max drawdown (different bases; see tolerances).
   if (observed.reportedMaxDrawdown === null) {
-    checks.push({ check: "MAX_DRAWDOWN", status: "INSUFFICIENT_DATA", expected: null, actual: observed.arfMaxDrawdown, tolerance: null, detail: "summary does not report max drawdown" });
+    checks.push({
+      check: "MAX_DRAWDOWN",
+      status: "INSUFFICIENT_DATA",
+      expected: null,
+      actual: observed.arfMaxDrawdown,
+      tolerance: null,
+      detail: "summary does not report max drawdown",
+    });
   } else {
     const tv = new D(observed.reportedMaxDrawdown).abs();
     const arf = new D(observed.arfMaxDrawdown);
     const tol = tv.times(PARITY_TOLERANCES.drawdownRelative);
-    const status: ParityStatus = arf.minus(tv).abs().lte(tol) ? "PASS" : arf.lt(tv) ? "WARN" : "FAIL";
+    const status: ParityStatus = arf.minus(tv).abs().lte(tol)
+      ? "PASS"
+      : arf.lt(tv)
+        ? "WARN"
+        : "FAIL";
     checks.push({
       check: "MAX_DRAWDOWN",
       status,

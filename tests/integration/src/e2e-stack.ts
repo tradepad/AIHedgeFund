@@ -9,7 +9,9 @@ const port = Number(process.env.E2E_API_PORT ?? "4400");
 const webUrl = process.env.E2E_WEB_URL ?? "http://localhost:3100";
 
 const stack = await startStack({ port, uploadBaseUrl: `${webUrl}/arf-api`, rateLimitMax: 1000 });
-process.stdout.write(`e2e stack ready on ${stack.baseUrl} (database ${stack.db.url.split("/").at(-1) ?? ""})\n`);
+process.stdout.write(
+  `e2e stack ready on ${stack.baseUrl} (database ${stack.db.url.split("/").at(-1) ?? ""})\n`,
+);
 
 let stopping = false;
 const shutdown = (): void => {

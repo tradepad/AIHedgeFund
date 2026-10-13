@@ -1,5 +1,12 @@
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
-import { DomainEventSchema, uuidv7, type ActorRef, type AggregateType, type DomainEvent, type DomainEventType } from "@arf/contracts";
+import {
+  DomainEventSchema,
+  uuidv7,
+  type ActorRef,
+  type AggregateType,
+  type DomainEvent,
+  type DomainEventType,
+} from "@arf/contracts";
 import { outboxEvents } from "./schema";
 import type { Database, DbOrTx } from "./client";
 
@@ -83,7 +90,11 @@ export async function dispatchOutboxBatch(
         await publish(toDomainEvent(row));
         await tx
           .update(outboxEvents)
-          .set({ dispatchedAt: new Date(), attempts: sql`${outboxEvents.attempts} + 1`, lastError: null })
+          .set({
+            dispatchedAt: new Date(),
+            attempts: sql`${outboxEvents.attempts} + 1`,
+            lastError: null,
+          })
           .where(and(eq(outboxEvents.id, row.id)));
         dispatched += 1;
       } catch (error) {

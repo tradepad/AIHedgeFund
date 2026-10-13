@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { ParityStatusSchema, StrategyLibraryRowSchema, WorkflowStateSchema, pageOf } from "@arf/contracts";
+import {
+  ParityStatusSchema,
+  StrategyLibraryRowSchema,
+  WorkflowStateSchema,
+  pageOf,
+} from "@arf/contracts";
 import { EmptyState, ParityBadge, StaleNotice, StateBadge, formatDecimal } from "@arf/ui";
 import { ProblemView } from "@/components/problem";
 import { Utc } from "@/components/time";
@@ -9,7 +14,11 @@ export const dynamic = "force-dynamic";
 
 const FILTERS = ["state", "parityStatus", "timeframe", "assetClass"] as const;
 
-export default async function StrategyLibrary({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function StrategyLibrary({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const sp = await searchParams;
   const q = new URLSearchParams({ limit: "50" });
   for (const f of FILTERS) {
@@ -17,7 +26,10 @@ export default async function StrategyLibrary({ searchParams }: { searchParams: 
     if (v) q.set(f, v);
   }
   if (sp.cursor) q.set("cursor", sp.cursor);
-  const res = await apiGet(`/v1/strategy-library?${q.toString()}`, pageOf(StrategyLibraryRowSchema));
+  const res = await apiGet(
+    `/v1/strategy-library?${q.toString()}`,
+    pageOf(StrategyLibraryRowSchema),
+  );
   const next = new URLSearchParams(q);
   next.delete("limit");
   return (
@@ -112,7 +124,13 @@ export default async function StrategyLibrary({ searchParams }: { searchParams: 
               ))}
             </tbody>
           </table>
-          {res.data.nextCursor ? <Link href={`/strategies?${new URLSearchParams({ ...Object.fromEntries(next), cursor: res.data.nextCursor }).toString()}`}>Next page →</Link> : null}
+          {res.data.nextCursor ? (
+            <Link
+              href={`/strategies?${new URLSearchParams({ ...Object.fromEntries(next), cursor: res.data.nextCursor }).toString()}`}
+            >
+              Next page →
+            </Link>
+          ) : null}
         </div>
       )}
     </div>

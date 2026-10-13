@@ -10,7 +10,10 @@ export const StorageEnvSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
   /** Absolute, so the API and every worker resolve the same directory whatever their working directory. */
-  LOCAL_STORAGE_DIR: z.string().refine((p) => isAbsolute(p), "LOCAL_STORAGE_DIR must be an absolute path").optional(),
+  LOCAL_STORAGE_DIR: z
+    .string()
+    .refine((p) => isAbsolute(p), "LOCAL_STORAGE_DIR must be an absolute path")
+    .optional(),
   LOCAL_STORAGE_SIGNING_SECRET: z.string().min(32).optional(),
   UPLOAD_PUBLIC_BASE_URL: z.string().url().default("http://localhost:3000/arf-api"),
   S3_ENDPOINT: z.string().optional(),
@@ -26,7 +29,9 @@ export type StorageEnv = z.infer<typeof StorageEnvSchema>;
 export function createObjectStore(env: StorageEnv): ObjectStore {
   if (env.STORAGE_DRIVER === "s3") {
     if (!env.S3_BUCKET || !env.S3_ACCESS_KEY_ID || !env.S3_SECRET_ACCESS_KEY) {
-      throw new Error("S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are required for STORAGE_DRIVER=s3");
+      throw new Error(
+        "S3_BUCKET, S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY are required for STORAGE_DRIVER=s3",
+      );
     }
     return new S3ObjectStore({
       endpoint: env.S3_ENDPOINT,
@@ -37,8 +42,15 @@ export function createObjectStore(env: StorageEnv): ObjectStore {
       forcePathStyle: env.S3_FORCE_PATH_STYLE,
     });
   }
-  if (env.NODE_ENV === "production") throw new Error("the local storage driver is not allowed in production");
-  if (!env.LOCAL_STORAGE_SIGNING_SECRET) throw new Error("LOCAL_STORAGE_SIGNING_SECRET is required for STORAGE_DRIVER=local");
-  if (!env.LOCAL_STORAGE_DIR) throw new Error("LOCAL_STORAGE_DIR is required for STORAGE_DRIVER=local");
-  return new LocalObjectStore(env.LOCAL_STORAGE_DIR, env.LOCAL_STORAGE_SIGNING_SECRET, env.UPLOAD_PUBLIC_BASE_URL);
+  if (env.NODE_ENV === "production")
+    throw new Error("the local storage driver is not allowed in production");
+  if (!env.LOCAL_STORAGE_SIGNING_SECRET)
+    throw new Error("LOCAL_STORAGE_SIGNING_SECRET is required for STORAGE_DRIVER=local");
+  if (!env.LOCAL_STORAGE_DIR)
+    throw new Error("LOCAL_STORAGE_DIR is required for STORAGE_DRIVER=local");
+  return new LocalObjectStore(
+    env.LOCAL_STORAGE_DIR,
+    env.LOCAL_STORAGE_SIGNING_SECRET,
+    env.UPLOAD_PUBLIC_BASE_URL,
+  );
 }

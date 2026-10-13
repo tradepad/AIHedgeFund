@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 // React's development tooling needs eval; production builds do not.
-const scriptSrc = process.env.NODE_ENV === "production" ? "script-src 'self' 'unsafe-inline'" : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+const scriptSrc =
+  process.env.NODE_ENV === "production"
+    ? "script-src 'self' 'unsafe-inline'"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
 
 const config: NextConfig = {
   reactStrictMode: true,

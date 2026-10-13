@@ -11,7 +11,10 @@ export const dynamic = "force-dynamic";
 
 export default async function DecisionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const [version, context] = await Promise.all([apiGet(`/v1/strategy-versions/${id}`, StrategyVersionSchema), apiGet(`/v1/strategy-versions/${id}/decision-context`, DecisionContextSchema)]);
+  const [version, context] = await Promise.all([
+    apiGet(`/v1/strategy-versions/${id}`, StrategyVersionSchema),
+    apiGet(`/v1/strategy-versions/${id}/decision-context`, DecisionContextSchema),
+  ]);
   if (!version.ok) return <ProblemView problem={version.problem} />;
   if (!context.ok) return <ProblemView problem={context.problem} />;
   const v = version.data;
@@ -37,18 +40,27 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
               {v.symbol} · {v.timeframe}
             </dd>
             <dt>Definition hash</dt>
-            <dd className="mono">{evidence.definitionHash ? shortHash(evidence.definitionHash) : "missing"}</dd>
+            <dd className="mono">
+              {evidence.definitionHash ? shortHash(evidence.definitionHash) : "missing"}
+            </dd>
             <dt>Pine source hash</dt>
             <dd className="mono">{evidence.pineSourceHash ?? "missing"}</dd>
             <dt>Manifest hash</dt>
-            <dd className="mono">{evidence.manifestHash ? shortHash(evidence.manifestHash) : "missing"}</dd>
+            <dd className="mono">
+              {evidence.manifestHash ? shortHash(evidence.manifestHash) : "missing"}
+            </dd>
             <dt>Parity</dt>
             <dd>
-              <ParityBadge status={evidence.parityStatus} /> {evidence.parityReportId ? <span className="mono muted">{shortHash(evidence.parityReportId)}</span> : null}
+              <ParityBadge status={evidence.parityStatus} />{" "}
+              {evidence.parityReportId ? (
+                <span className="mono muted">{shortHash(evidence.parityReportId)}</span>
+              ) : null}
             </dd>
           </dl>
           <p className="muted">
-            Evidence is assembled by the API from canonical records at decision time. Validator recommendation: no validator agent runs in this slice, so the parity report and ARF metrics are the validation evidence.
+            Evidence is assembled by the API from canonical records at decision time. Validator
+            recommendation: no validator agent runs in this slice, so the parity report and ARF
+            metrics are the validation evidence.
           </p>
         </section>
         <section className="card">
@@ -81,11 +93,17 @@ export default async function DecisionPage({ params }: { params: Promise<{ id: s
       ) : v.state !== "PAPER_APPROVAL_REVIEW" ? (
         <section className="card">
           <p>
-            Decisions are recorded in the paper-approval review state. This version is in <StateBadge state={v.state} />.
+            Decisions are recorded in the paper-approval review state. This version is in{" "}
+            <StateBadge state={v.state} />.
           </p>
         </section>
       ) : (
-        <DecisionForm versionId={v.id} parityReportId={evidence.parityReportId} canApprove={evidence.hardFailures.length === 0 && evidence.missingEvidence.length === 0} overridableWarnings={overridableWarnings} />
+        <DecisionForm
+          versionId={v.id}
+          parityReportId={evidence.parityReportId}
+          canApprove={evidence.hardFailures.length === 0 && evidence.missingEvidence.length === 0}
+          overridableWarnings={overridableWarnings}
+        />
       )}
     </div>
   );

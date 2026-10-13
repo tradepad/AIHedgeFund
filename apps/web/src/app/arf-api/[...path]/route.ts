@@ -9,11 +9,34 @@ import { authHeaders, currentSession } from "@/lib/session";
  */
 export const dynamic = "force-dynamic";
 
-const FORWARDED_REQUEST_HEADERS = ["content-type", "idempotency-key", "last-event-id", "traceparent"];
-const FORWARDED_RESPONSE_HEADERS = ["content-type", "content-disposition", "cache-control", "x-trace-id", "idempotency-replayed", "retry-after"];
+const FORWARDED_REQUEST_HEADERS = [
+  "content-type",
+  "idempotency-key",
+  "last-event-id",
+  "traceparent",
+];
+const FORWARDED_RESPONSE_HEADERS = [
+  "content-type",
+  "content-disposition",
+  "cache-control",
+  "x-trace-id",
+  "idempotency-replayed",
+  "retry-after",
+];
 
 function problem(status: number, code: string, detail: string): NextResponse {
-  return NextResponse.json({ type: "about:blank", title: "Request rejected", status, detail, instance: "", code, traceId: "" }, { status, headers: { "content-type": "application/problem+json" } });
+  return NextResponse.json(
+    {
+      type: "about:blank",
+      title: "Request rejected",
+      status,
+      detail,
+      instance: "",
+      code,
+      traceId: "",
+    },
+    { status, headers: { "content-type": "application/problem+json" } },
+  );
 }
 
 function sameOrigin(request: NextRequest): boolean {
@@ -23,11 +46,16 @@ function sameOrigin(request: NextRequest): boolean {
   return origin !== null && new URL(origin).host === request.headers.get("host");
 }
 
-async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }): Promise<Response> {
+async function proxy(
+  request: NextRequest,
+  context: { params: Promise<{ path: string[] }> },
+): Promise<Response> {
   const { path } = await context.params;
-  if (path[0] !== "v1" || path.some((p) => p === ".." || p.includes("\\"))) return problem(404, "NOT_FOUND", "unknown API path");
+  if (path[0] !== "v1" || path.some((p) => p === ".." || p.includes("\\")))
+    return problem(404, "NOT_FOUND", "unknown API path");
   const isUpload = path[1] === "object-uploads";
-  if (request.method !== "GET" && !sameOrigin(request)) return problem(403, "CSRF_REJECTED", "cross-site requests are not allowed");
+  if (request.method !== "GET" && !sameOrigin(request))
+    return problem(403, "CSRF_REJECTED", "cross-site requests are not allowed");
 
   const headers: Record<string, string> = {};
   for (const name of FORWARDED_REQUEST_HEADERS) {

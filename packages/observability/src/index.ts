@@ -67,14 +67,21 @@ const meter = metrics.getMeter("arf-os");
  * Run `fn` inside an OpenTelemetry span. With no SDK registered this is a
  * no-op wrapper, so instrumentation is free until an exporter is configured.
  */
-export async function withSpan<T>(name: string, attributes: Attributes, fn: () => Promise<T>): Promise<T> {
+export async function withSpan<T>(
+  name: string,
+  attributes: Attributes,
+  fn: () => Promise<T>,
+): Promise<T> {
   return tracer.startActiveSpan(name, { attributes }, async (span) => {
     try {
       const result = await fn();
       span.setStatus({ code: SpanStatusCode.OK });
       return result;
     } catch (error) {
-      span.setStatus({ code: SpanStatusCode.ERROR, message: error instanceof Error ? error.message : "error" });
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: error instanceof Error ? error.message : "error",
+      });
       throw error;
     } finally {
       span.end();
@@ -96,7 +103,11 @@ export const instruments = {
  * Minimal liveness/readiness endpoint for background workers. `/healthz`
  * reports the process is up; `/readyz` runs the dependency check.
  */
-export function startHealthServer(port: number, service: string, ready: () => Promise<boolean>): Server {
+export function startHealthServer(
+  port: number,
+  service: string,
+  ready: () => Promise<boolean>,
+): Server {
   const server = createServer((req, res) => {
     const send = (status: number, body: Record<string, unknown>) => {
       res.writeHead(status, { "content-type": "application/json" });

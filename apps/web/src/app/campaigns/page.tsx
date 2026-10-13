@@ -8,9 +8,16 @@ import { CreateCampaign } from "./create-campaign";
 
 export const dynamic = "force-dynamic";
 
-export default async function CampaignsPage({ searchParams }: { searchParams: Promise<{ cursor?: string }> }) {
+export default async function CampaignsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cursor?: string }>;
+}) {
   const { cursor } = await searchParams;
-  const res = await apiGet(`/v1/campaigns?limit=25${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, pageOf(CampaignSchema));
+  const res = await apiGet(
+    `/v1/campaigns?limit=25${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+    pageOf(CampaignSchema),
+  );
   return (
     <div className="grid grid-2">
       <div className="stack">
@@ -18,7 +25,9 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
         {!res.ok ? (
           <ProblemView problem={res.problem} />
         ) : res.data.items.length === 0 ? (
-          <EmptyState title="No campaigns yet">Create the first campaign to start research.</EmptyState>
+          <EmptyState title="No campaigns yet">
+            Create the first campaign to start research.
+          </EmptyState>
         ) : (
           <div className="card">
             <table>
@@ -45,7 +54,11 @@ export default async function CampaignsPage({ searchParams }: { searchParams: Pr
                 ))}
               </tbody>
             </table>
-            {res.data.nextCursor ? <Link href={`/campaigns?cursor=${encodeURIComponent(res.data.nextCursor)}`}>Older campaigns →</Link> : null}
+            {res.data.nextCursor ? (
+              <Link href={`/campaigns?cursor=${encodeURIComponent(res.data.nextCursor)}`}>
+                Older campaigns →
+              </Link>
+            ) : null}
           </div>
         )}
       </div>

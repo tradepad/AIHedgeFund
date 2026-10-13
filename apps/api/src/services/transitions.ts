@@ -56,7 +56,9 @@ export async function applyTransition(
     reasonCodes: input.reasonCodes,
     summary: input.summary,
     evidenceIds: input.evidenceIds,
-    transitionKey: sha256Hex(`${input.aggregateId}|${input.from}|${input.to}|${scope.principal.userId}|${input.key}`),
+    transitionKey: sha256Hex(
+      `${input.aggregateId}|${input.from}|${input.to}|${scope.principal.userId}|${input.key}`,
+    ),
     traceId: scope.traceId,
     correlationId: scope.correlationId,
     humanOverride: input.humanOverride ?? false,
@@ -67,14 +69,29 @@ export async function applyTransition(
 }
 
 /** User-requested transition of a strategy version. Terminal outcomes require a committee decision instead. */
-export async function transitionVersion(ctx: AppContext, tx: Tx, scope: RequestScope, versionId: string, body: TransitionRequest, key: string): Promise<TransitionSuccess> {
+export async function transitionVersion(
+  ctx: AppContext,
+  tx: Tx,
+  scope: RequestScope,
+  versionId: string,
+  body: TransitionRequest,
+  key: string,
+): Promise<TransitionSuccess> {
   if (body.to === "PAPER_APPROVED" || body.to === "REJECTED") {
-    throw problems.unprocessable("USE_DECISION_ENDPOINT", "approval and rejection are recorded through POST /v1/committee/decisions");
+    throw problems.unprocessable(
+      "USE_DECISION_ENDPOINT",
+      "approval and rejection are recorded through POST /v1/committee/decisions",
+    );
   }
   const [version] = await tx
     .select({ state: strategyVersions.state })
     .from(strategyVersions)
-    .where(and(eq(strategyVersions.id, versionId), eq(strategyVersions.organisationId, scope.principal.organisationId)));
+    .where(
+      and(
+        eq(strategyVersions.id, versionId),
+        eq(strategyVersions.organisationId, scope.principal.organisationId),
+      ),
+    );
   if (!version) throw problems.notFound("strategy version");
   // Promotion past verification is judged on the server's evidence snapshot,
   // never on a client-chosen subset that could omit a failed parity report.
@@ -98,7 +115,12 @@ export async function listTransitions(ctx: AppContext, scope: RequestScope, aggr
   const rows = await ctx.db
     .select()
     .from(stateTransitions)
-    .where(and(eq(stateTransitions.organisationId, scope.principal.organisationId), eq(stateTransitions.aggregateId, aggregateId)))
+    .where(
+      and(
+        eq(stateTransitions.organisationId, scope.principal.organisationId),
+        eq(stateTransitions.aggregateId, aggregateId),
+      ),
+    )
     .orderBy(asc(stateTransitions.createdAt), asc(stateTransitions.id));
   return rows.map((r) => ({
     id: r.id,

@@ -18,7 +18,17 @@ export class TerminalJobError extends Error {
  * Persist job status so user-visible progress never depends on logs or on
  * Redis retention. Keyed by the deterministic BullMQ job id.
  */
-export async function recordJobStart(db: Database, input: { jobKey: string; queue: string; jobName: string; payload: JobPayload; attempt: number; verificationId?: string | null }): Promise<void> {
+export async function recordJobStart(
+  db: Database,
+  input: {
+    jobKey: string;
+    queue: string;
+    jobName: string;
+    payload: JobPayload;
+    attempt: number;
+    verificationId?: string | null;
+  },
+): Promise<void> {
   const now = new Date();
   await db
     .insert(jobRuns)
@@ -37,14 +47,26 @@ export async function recordJobStart(db: Database, input: { jobKey: string; queu
     })
     .onConflictDoUpdate({
       target: jobRuns.jobKey,
-      set: { status: "RUNNING", attempts: input.attempt, startedAt: now, updatedAt: now, lastErrorCode: null, lastErrorMessage: null },
+      set: {
+        status: "RUNNING",
+        attempts: input.attempt,
+        startedAt: now,
+        updatedAt: now,
+        lastErrorCode: null,
+        lastErrorMessage: null,
+      },
     });
 }
 
 export async function recordJobEnd(
   db: Database,
   jobKey: string,
-  outcome: { status: Extract<JobStatus, "SUCCEEDED" | "FAILED_RETRYABLE" | "FAILED_TERMINAL">; errorCode?: string; errorMessage?: string; backtestRunId?: string | null },
+  outcome: {
+    status: Extract<JobStatus, "SUCCEEDED" | "FAILED_RETRYABLE" | "FAILED_TERMINAL">;
+    errorCode?: string;
+    errorMessage?: string;
+    backtestRunId?: string | null;
+  },
 ): Promise<void> {
   const now = new Date();
   await db
@@ -90,20 +112,55 @@ export function tracked(
     const attempt = job.attemptsMade + 1;
     const started = Date.now();
     const ids = resolveIds(payload);
-    const base = { jobKey, jobName: job.name, queue, traceId: payload.traceId, correlationId: payload.correlationId, organisationId: payload.organisationId, verificationId: ids.verificationId ?? null, attempt };
-    await recordJobStart(db, { jobKey, queue, jobName: job.name, payload, attempt, verificationId: ids.verificationId ?? null });
+    const base = {
+      jobKey,
+      jobName: job.name,
+      queue,
+      traceId: payload.traceId,
+      correlationId: payload.correlationId,
+      organisationId: payload.organisationId,
+      verificationId: ids.verificationId ?? null,
+      attempt,
+    };
+    await recordJobStart(db, {
+      jobKey,
+      queue,
+      jobName: job.name,
+      payload,
+      attempt,
+      verificationId: ids.verificationId ?? null,
+    });
     try {
       const out = await handler({ jobKey, attempt, payload });
-      await recordJobEnd(db, jobKey, { status: "SUCCEEDED", backtestRunId: out?.backtestRunId ?? null });
-      logger.info({ ...base, durationMs: Date.now() - started, outcome: "SUCCEEDED" }, "job succeeded");
+      await recordJobEnd(db, jobKey, {
+        status: "SUCCEEDED",
+        backtestRunId: out?.backtestRunId ?? null,
+      });
+      logger.info(
+        { ...base, durationMs: Date.now() - started, outcome: "SUCCEEDED" },
+        "job succeeded",
+      );
     } catch (error) {
       const terminal = error instanceof TerminalJobError;
       const maxAttempts = job.opts.attempts ?? 1;
       const exhausted = terminal || attempt >= maxAttempts;
       const code = terminal ? error.code : "JOB_ERROR";
       const message = error instanceof Error ? error.message : "unknown error";
-      await recordJobEnd(db, jobKey, { status: exhausted ? "FAILED_TERMINAL" : "FAILED_RETRYABLE", errorCode: code, errorMessage: message });
-      logger.error({ ...base, durationMs: Date.now() - started, outcome: exhausted ? "FAILED_TERMINAL" : "FAILED_RETRYABLE", errorCode: code, err: message }, "job failed");
+      await recordJobEnd(db, jobKey, {
+        status: exhausted ? "FAILED_TERMINAL" : "FAILED_RETRYABLE",
+        errorCode: code,
+        errorMessage: message,
+      });
+      logger.error(
+        {
+          ...base,
+          durationMs: Date.now() - started,
+          outcome: exhausted ? "FAILED_TERMINAL" : "FAILED_RETRYABLE",
+          errorCode: code,
+          err: message,
+        },
+        "job failed",
+      );
       if (terminal) throw new UnrecoverableError(`${code}: ${message}`);
       throw error;
     }

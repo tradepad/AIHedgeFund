@@ -37,7 +37,11 @@ export default defineConfig({
     {
       command: `pnpm exec next build && pnpm exec next start --port ${WEB_PORT}`,
       url: `${WEB_URL}/login`,
-      env: { ARF_API_URL: `http://127.0.0.1:${API_PORT}`, ARF_AUTH_MODE: "dev", NEXT_TELEMETRY_DISABLED: "1" },
+      env: {
+        ARF_API_URL: `http://127.0.0.1:${API_PORT}`,
+        ARF_AUTH_MODE: "dev",
+        NEXT_TELEMETRY_DISABLED: "1",
+      },
       reuseExistingServer: false,
       timeout: 300_000,
     },

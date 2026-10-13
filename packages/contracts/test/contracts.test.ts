@@ -55,19 +55,28 @@ describe("command contracts", () => {
   };
 
   it("requires an override reason when a human override is declared", () => {
-    expect(CreateDecisionRequestSchema.safeParse({ ...base, humanOverride: true }).success).toBe(false);
+    expect(CreateDecisionRequestSchema.safeParse({ ...base, humanOverride: true }).success).toBe(
+      false,
+    );
     expect(
-      CreateDecisionRequestSchema.safeParse({ ...base, humanOverride: true, overrideReason: "Accepted known data gap." })
-        .success,
+      CreateDecisionRequestSchema.safeParse({
+        ...base,
+        humanOverride: true,
+        overrideReason: "Accepted known data gap.",
+      }).success,
     ).toBe(true);
   });
 
   it("requires an explicit acknowledgement", () => {
-    expect(CreateDecisionRequestSchema.safeParse({ ...base, acknowledgement: false }).success).toBe(false);
+    expect(CreateDecisionRequestSchema.safeParse({ ...base, acknowledgement: false }).success).toBe(
+      false,
+    );
   });
 
   it("rejects decision values outside the allowed enum", () => {
-    expect(CreateDecisionRequestSchema.safeParse({ ...base, decision: "LIVE_APPROVED" }).success).toBe(false);
+    expect(
+      CreateDecisionRequestSchema.safeParse({ ...base, decision: "LIVE_APPROVED" }).success,
+    ).toBe(false);
   });
 
   it("requires explicit change description for child versions", () => {
@@ -83,9 +92,10 @@ describe("command contracts", () => {
       contaminatedData: [],
     };
     expect(CreateStrategyVersionRequestSchema.safeParse(child).success).toBe(false);
-    expect(CreateStrategyVersionRequestSchema.safeParse({ ...child, changeCategories: ["PARAMETERS"] }).success).toBe(
-      true,
-    );
+    expect(
+      CreateStrategyVersionRequestSchema.safeParse({ ...child, changeCategories: ["PARAMETERS"] })
+        .success,
+    ).toBe(true);
   });
 
   it("only accepts CSV uploads within the size limit", () => {
@@ -97,8 +107,14 @@ describe("command contracts", () => {
       sha256: "a".repeat(64),
     };
     expect(CreateReportUploadRequestSchema.safeParse(upload).success).toBe(true);
-    expect(CreateReportUploadRequestSchema.safeParse({ ...upload, fileName: "trades.xlsx" }).success).toBe(false);
-    expect(CreateReportUploadRequestSchema.safeParse({ ...upload, fileName: "../x.csv" }).success).toBe(false);
-    expect(CreateReportUploadRequestSchema.safeParse({ ...upload, sizeBytes: 50 * 1024 * 1024 }).success).toBe(false);
+    expect(
+      CreateReportUploadRequestSchema.safeParse({ ...upload, fileName: "trades.xlsx" }).success,
+    ).toBe(false);
+    expect(
+      CreateReportUploadRequestSchema.safeParse({ ...upload, fileName: "../x.csv" }).success,
+    ).toBe(false);
+    expect(
+      CreateReportUploadRequestSchema.safeParse({ ...upload, sizeBytes: 50 * 1024 * 1024 }).success,
+    ).toBe(false);
   });
 });

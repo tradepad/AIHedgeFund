@@ -23,13 +23,19 @@ function main(): void {
   const logger = createLogger("worker-backtest", { level: env.LOG_LEVEL });
   const handle = createDb(env.DATABASE_URL);
   const deps = { db: handle.db, store: createObjectStore(env) };
-  const ids = (p: { payload: Record<string, unknown> }) => ({ verificationId: verificationIdOf(p.payload) });
+  const ids = (p: { payload: Record<string, unknown> }) => ({
+    verificationId: verificationIdOf(p.payload),
+  });
   const worker = startWorker(
     QUEUES.backtest,
     redisConnection(env.REDIS_URL),
     {
-      "report.parse": tracked(handle.db, logger, QUEUES.backtest, ids, ({ payload }) => handleReportParse(deps, payload)),
-      "trades.normalise": tracked(handle.db, logger, QUEUES.backtest, ids, ({ payload }) => handleTradesNormalise(deps, payload)),
+      "report.parse": tracked(handle.db, logger, QUEUES.backtest, ids, ({ payload }) =>
+        handleReportParse(deps, payload),
+      ),
+      "trades.normalise": tracked(handle.db, logger, QUEUES.backtest, ids, ({ payload }) =>
+        handleTradesNormalise(deps, payload),
+      ),
     },
     { concurrency: env.WORKER_CONCURRENCY },
   );
@@ -51,6 +57,8 @@ function main(): void {
 try {
   main();
 } catch (error: unknown) {
-  process.stderr.write(`worker-backtest failed to start: ${error instanceof Error ? error.message : "unknown error"}\n`);
+  process.stderr.write(
+    `worker-backtest failed to start: ${error instanceof Error ? error.message : "unknown error"}\n`,
+  );
   process.exit(1);
 }

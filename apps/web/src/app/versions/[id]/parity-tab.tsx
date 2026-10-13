@@ -8,8 +8,16 @@ import { latestRunId } from "./results-tab";
 export async function ParityTab({ version }: { version: StrategyVersion }) {
   const latest = await latestRunId(version.id);
   if (!latest) return <EmptyState title="No verification yet" />;
-  const res = await apiGet(`/v1/tradingview-verifications/${latest.verificationId}/parity`, ParityReportSchema);
-  if (!res.ok) return res.problem.status === 404 ? <EmptyState title="Parity has not been calculated yet" /> : <ProblemView problem={res.problem} />;
+  const res = await apiGet(
+    `/v1/tradingview-verifications/${latest.verificationId}/parity`,
+    ParityReportSchema,
+  );
+  if (!res.ok)
+    return res.problem.status === 404 ? (
+      <EmptyState title="Parity has not been calculated yet" />
+    ) : (
+      <ProblemView problem={res.problem} />
+    );
   const p = res.data;
   return (
     <section className="card stack">
@@ -21,10 +29,17 @@ export async function ParityTab({ version }: { version: StrategyVersion }) {
           {p.policyVersion} · <Utc value={p.createdAt} />
         </span>
       </div>
-      <p className="muted">TradingView-reported values compared with ARF&apos;s independent recomputation from the exported trade list. Identity is checked first, then the trade sequence, then aggregates.</p>
+      <p className="muted">
+        TradingView-reported values compared with ARF&apos;s independent recomputation from the
+        exported trade list. Identity is checked first, then the trade sequence, then aggregates.
+      </p>
       {p.firstDivergence ? (
-        <div className={`notice ${p.firstDivergence.status === "FAIL" ? "bad" : "warn"}`} data-testid="first-divergence">
-          <strong>First divergence: {p.firstDivergence.check}</strong> — {p.firstDivergence.detail}. Expected {p.firstDivergence.expected ?? "—"}, observed {p.firstDivergence.actual ?? "—"}.
+        <div
+          className={`notice ${p.firstDivergence.status === "FAIL" ? "bad" : "warn"}`}
+          data-testid="first-divergence"
+        >
+          <strong>First divergence: {p.firstDivergence.check}</strong> — {p.firstDivergence.detail}.
+          Expected {p.firstDivergence.expected ?? "—"}, observed {p.firstDivergence.actual ?? "—"}.
         </div>
       ) : null}
       <table data-testid="parity-table">

@@ -1,5 +1,12 @@
 import { and, eq, or } from "drizzle-orm";
-import { err, ok, type MemberRole, type OrganisationId, type Result, type UserId } from "@arf/contracts";
+import {
+  err,
+  ok,
+  type MemberRole,
+  type OrganisationId,
+  type Result,
+  type UserId,
+} from "@arf/contracts";
 import { memberships, organisations, users, type DbOrTx } from "@arf/db";
 import type { VerifiedIdentity } from "./verifier";
 
@@ -30,18 +37,32 @@ export async function resolvePrincipal(
   identity: VerifiedIdentity,
   requestedOrganisation: string | undefined,
 ): Promise<Result<Principal, PrincipalFailure>> {
-  const [user] = await db.select().from(users).where(eq(users.externalSubject, identity.subject)).limit(1);
-  if (!user) return err({ code: "USER_NOT_PROVISIONED", detail: "no user is provisioned for this identity" });
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.externalSubject, identity.subject))
+    .limit(1);
+  if (!user)
+    return err({
+      code: "USER_NOT_PROVISIONED",
+      detail: "no user is provisioned for this identity",
+    });
 
   let orgFilter;
   if (identity.externalOrgId) {
     orgFilter = eq(organisations.externalAuthOrgId, identity.externalOrgId);
   } else if (requestedOrganisation) {
     orgFilter = UUID_RE.test(requestedOrganisation)
-      ? or(eq(organisations.id, requestedOrganisation), eq(organisations.slug, requestedOrganisation))
+      ? or(
+          eq(organisations.id, requestedOrganisation),
+          eq(organisations.slug, requestedOrganisation),
+        )
       : eq(organisations.slug, requestedOrganisation);
   } else {
-    return err({ code: "ORGANISATION_REQUIRED", detail: "select an organisation with the X-ARF-Org header" });
+    return err({
+      code: "ORGANISATION_REQUIRED",
+      detail: "select an organisation with the X-ARF-Org header",
+    });
   }
 
   const [row] = await db
@@ -50,14 +71,18 @@ export async function resolvePrincipal(
     .innerJoin(organisations, eq(organisations.id, memberships.organisationId))
     .where(and(eq(memberships.userId, user.id), orgFilter))
     .limit(1);
-  if (!row) return err({ code: "NOT_A_MEMBER", detail: "you are not a member of this organisation" });
+  if (!row)
+    return err({ code: "NOT_A_MEMBER", detail: "you are not a member of this organisation" });
   if (
     identity.externalOrgId &&
     requestedOrganisation &&
     requestedOrganisation !== row.org.slug &&
     requestedOrganisation !== row.org.id
   ) {
-    return err({ code: "ORGANISATION_MISMATCH", detail: "requested organisation differs from the active session organisation" });
+    return err({
+      code: "ORGANISATION_MISMATCH",
+      detail: "requested organisation differs from the active session organisation",
+    });
   }
   return ok({
     userId: user.id as UserId,

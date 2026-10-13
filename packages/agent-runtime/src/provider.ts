@@ -33,5 +33,7 @@ export interface StructuredGenerationResult {
  */
 export interface ModelProvider {
   readonly name: string;
-  generateStructured<TInput, TOutput>(request: StructuredGenerationRequest<TInput, TOutput>): Promise<StructuredGenerationResult>;
+  generateStructured<TInput, TOutput>(
+    request: StructuredGenerationRequest<TInput, TOutput>,
+  ): Promise<StructuredGenerationResult>;
 }

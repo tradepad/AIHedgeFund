@@ -25,13 +25,22 @@ export function DefinitionForm({ versionId, template }: { versionId: string; tem
       return;
     }
     setIssues([]);
-    if (await run(`/v1/strategy-versions/${versionId}/definition`, { definition: sdl.data })) router.refresh();
+    if (await run(`/v1/strategy-versions/${versionId}/definition`, { definition: sdl.data }))
+      router.refresh();
   }
   return (
     <section className="card stack">
       <h2>Attach Strategy Definition (SDL 1.0.0)</h2>
-      <p className="muted">Prefilled with the documented example adapted to this version&apos;s symbol and timeframe. Edit it to describe your strategy. Once attached it is write-once.</p>
-      <textarea rows={28} value={text} onChange={(e) => setText(e.target.value)} aria-label="Strategy Definition JSON" />
+      <p className="muted">
+        Prefilled with the documented example adapted to this version&apos;s symbol and timeframe.
+        Edit it to describe your strategy. Once attached it is write-once.
+      </p>
+      <textarea
+        rows={28}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        aria-label="Strategy Definition JSON"
+      />
       {issues.length > 0 ? (
         <ul className="notice bad" role="alert">
           {issues.slice(0, 10).map((i) => (
@@ -43,7 +52,12 @@ export function DefinitionForm({ versionId, template }: { versionId: string; tem
       ) : null}
       <ProblemInline problem={problem} />
       <div>
-        <button type="button" onClick={() => void submit()} disabled={pending} data-testid="attach-sdl">
+        <button
+          type="button"
+          onClick={() => void submit()}
+          disabled={pending}
+          data-testid="attach-sdl"
+        >
           Validate and attach
         </button>
       </div>

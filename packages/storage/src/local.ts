@@ -2,7 +2,12 @@ import { z } from "zod";
 import { createHmac, createHash, timingSafeEqual } from "node:crypto";
 import { mkdir, readFile, writeFile, stat, rename } from "node:fs/promises";
 import { dirname, join, resolve, sep } from "node:path";
-import { ObjectConflictError, type ObjectStore, type PresignRequest, type PresignedPut } from "./object-store";
+import {
+  ObjectConflictError,
+  type ObjectStore,
+  type PresignRequest,
+  type PresignedPut,
+} from "./object-store";
 
 const UploadTokenClaimsSchema = z
   .object({
@@ -30,7 +35,8 @@ export class LocalObjectStore implements ObjectStore {
     private readonly signingSecret: string,
     private readonly uploadBaseUrl: string,
   ) {
-    if (signingSecret.length < 32) throw new Error("local object store signing secret must be at least 32 characters");
+    if (signingSecret.length < 32)
+      throw new Error("local object store signing secret must be at least 32 characters");
     this.root = resolve(root);
   }
 
@@ -101,7 +107,9 @@ export class LocalObjectStore implements ObjectStore {
     const given = Buffer.from(mac, "base64url");
     if (given.length !== expected.length || !timingSafeEqual(given, expected)) return null;
     try {
-      const parsed = UploadTokenClaimsSchema.safeParse(JSON.parse(Buffer.from(body, "base64url").toString("utf8")));
+      const parsed = UploadTokenClaimsSchema.safeParse(
+        JSON.parse(Buffer.from(body, "base64url").toString("utf8")),
+      );
       if (!parsed.success || parsed.data.exp * 1000 < now.getTime()) return null;
       return parsed.data;
     } catch {
@@ -110,10 +118,14 @@ export class LocalObjectStore implements ObjectStore {
   }
 
   /** Accept a presigned upload: enforce size and checksum, then store immutably. */
-  async acceptUpload(token: string, bytes: Uint8Array): Promise<{ ok: true; key: string } | { ok: false; reason: string }> {
+  async acceptUpload(
+    token: string,
+    bytes: Uint8Array,
+  ): Promise<{ ok: true; key: string } | { ok: false; reason: string }> {
     const claims = this.verifyToken(token);
     if (!claims) return { ok: false, reason: "upload token is invalid or expired" };
-    if (bytes.byteLength !== claims.sizeBytes) return { ok: false, reason: "uploaded size differs from the declared size" };
+    if (bytes.byteLength !== claims.sizeBytes)
+      return { ok: false, reason: "uploaded size differs from the declared size" };
     if (createHash("sha256").update(bytes).digest("hex") !== claims.sha256Hex) {
       return { ok: false, reason: "uploaded content does not match the declared sha256" };
     }

@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { StrategyDefinitionSchema, exampleStrategyDefinition, type StrategyDefinition } from "../src";
+import {
+  StrategyDefinitionSchema,
+  exampleStrategyDefinition,
+  type StrategyDefinition,
+} from "../src";
 
 const clone = (): StrategyDefinition => structuredClone(exampleStrategyDefinition);
 
 describe("StrategyDefinitionSchema", () => {
   it("accepts the specification example", () => {
-    expect(StrategyDefinitionSchema.parse(exampleStrategyDefinition)).toEqual(exampleStrategyDefinition);
+    expect(StrategyDefinitionSchema.parse(exampleStrategyDefinition)).toEqual(
+      exampleStrategyDefinition,
+    );
   });
 
   it("rejects references to undeclared parameters", () => {

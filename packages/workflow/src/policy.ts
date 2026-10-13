@@ -1,4 +1,12 @@
-import { err, ok, type ActorType, type MemberRole, type ParityStatus, type Result, type WorkflowState } from "@arf/contracts";
+import {
+  err,
+  ok,
+  type ActorType,
+  type MemberRole,
+  type ParityStatus,
+  type Result,
+  type WorkflowState,
+} from "@arf/contracts";
 
 /** Version of the transition policy. Recorded on every transition and decision. */
 export const WORKFLOW_POLICY_VERSION = "workflow-policy/1.0.0";
@@ -149,7 +157,12 @@ export const TRANSITION_RULES: readonly TransitionRule[] = [
   {
     id: "version.block",
     aggregate: "STRATEGY_VERSION",
-    from: ["HYPOTHESIS_DRAFT", "PINE_DEVELOPMENT", "TRADINGVIEW_VERIFICATION", "PAPER_APPROVAL_REVIEW"],
+    from: [
+      "HYPOTHESIS_DRAFT",
+      "PINE_DEVELOPMENT",
+      "TRADINGVIEW_VERIFICATION",
+      "PAPER_APPROVAL_REVIEW",
+    ],
     to: "BLOCKED",
     allowedActorTypes: ["USER", "SERVICE"],
     allowedRoles: ["RESEARCHER", "DEVELOPER", "VALIDATOR", "OPERATOR", "ADMIN", "SERVICE_ACCOUNT"],
@@ -222,15 +235,27 @@ export interface TransitionRejection {
   missing?: EvidenceRequirement[];
 }
 
-export function findRule(aggregate: WorkflowAggregate, from: WorkflowState, to: WorkflowState): TransitionRule | undefined {
-  return TRANSITION_RULES.find((r) => r.aggregate === aggregate && r.to === to && r.from.includes(from));
+export function findRule(
+  aggregate: WorkflowAggregate,
+  from: WorkflowState,
+  to: WorkflowState,
+): TransitionRule | undefined {
+  return TRANSITION_RULES.find(
+    (r) => r.aggregate === aggregate && r.to === to && r.from.includes(from),
+  );
 }
 
 export function allowedTargets(aggregate: WorkflowAggregate, from: WorkflowState): WorkflowState[] {
-  return TRANSITION_RULES.filter((r) => r.aggregate === aggregate && r.from.includes(from)).map((r) => r.to);
+  return TRANSITION_RULES.filter((r) => r.aggregate === aggregate && r.from.includes(from)).map(
+    (r) => r.to,
+  );
 }
 
-function evidenceSatisfied(req: EvidenceRequirement, facts: EvidenceFacts, to: WorkflowState): boolean {
+function evidenceSatisfied(
+  req: EvidenceRequirement,
+  facts: EvidenceFacts,
+  to: WorkflowState,
+): boolean {
   switch (req) {
     case "STRATEGY_DEFINITION":
       return facts.hasStrategyDefinition;
@@ -246,7 +271,11 @@ function evidenceSatisfied(req: EvidenceRequirement, facts: EvidenceFacts, to: W
       return facts.metricsCalculated;
     case "COMMITTEE_DECISION":
       if (to === "PAPER_APPROVED") return facts.committeeDecision === "PAPER_APPROVED";
-      if (to === "REJECTED") return facts.committeeDecision === "REJECT" || facts.committeeDecision === "REWORK_WITH_NEW_VERSION";
+      if (to === "REJECTED")
+        return (
+          facts.committeeDecision === "REJECT" ||
+          facts.committeeDecision === "REWORK_WITH_NEW_VERSION"
+        );
       return facts.committeeDecision !== null;
     case "IDEA_CARD":
       return facts.ideaCardPresent;
@@ -269,32 +298,65 @@ export function evaluateTransition(input: {
 }): Result<TransitionRule, TransitionRejection> {
   const { aggregate, from, to, actor, facts } = input;
   if (TERMINAL_STATES.includes(from)) {
-    return err({ code: "TERMINAL_STATE", detail: `${from} is terminal; create a child version instead` });
+    return err({
+      code: "TERMINAL_STATE",
+      detail: `${from} is terminal; create a child version instead`,
+    });
   }
   const rule = findRule(aggregate, from, to);
-  if (!rule) return err({ code: "TRANSITION_NOT_ALLOWED", detail: `${aggregate} cannot move from ${from} to ${to}` });
-  if (!rule.allowedActorTypes.includes(actor.type) || (rule.requiresHuman && actor.type !== "USER")) {
-    return err({ code: "ACTOR_TYPE_NOT_ALLOWED", detail: `${actor.type} actors cannot perform ${rule.id}` });
+  if (!rule)
+    return err({
+      code: "TRANSITION_NOT_ALLOWED",
+      detail: `${aggregate} cannot move from ${from} to ${to}`,
+    });
+  if (
+    !rule.allowedActorTypes.includes(actor.type) ||
+    (rule.requiresHuman && actor.type !== "USER")
+  ) {
+    return err({
+      code: "ACTOR_TYPE_NOT_ALLOWED",
+      detail: `${actor.type} actors cannot perform ${rule.id}`,
+    });
   }
   if (!actor.roles.some((r) => rule.allowedRoles.includes(r))) {
-    return err({ code: "ROLE_NOT_ALLOWED", detail: `${rule.id} requires one of ${rule.allowedRoles.join(", ")}` });
+    return err({
+      code: "ROLE_NOT_ALLOWED",
+      detail: `${rule.id} requires one of ${rule.allowedRoles.join(", ")}`,
+    });
   }
   if (rule.requiresIndependentActor && facts.authorUserIds.includes(actor.id)) {
-    return err({ code: "SEPARATION_OF_DUTIES", detail: "the author of a version cannot approve it" });
+    return err({
+      code: "SEPARATION_OF_DUTIES",
+      detail: "the author of a version cannot approve it",
+    });
   }
   if (facts.unresolvedEvidenceIds.length > 0) {
-    return err({ code: "EVIDENCE_NOT_FOUND", detail: `evidence ids do not resolve: ${facts.unresolvedEvidenceIds.join(", ")}` });
+    return err({
+      code: "EVIDENCE_NOT_FOUND",
+      detail: `evidence ids do not resolve: ${facts.unresolvedEvidenceIds.join(", ")}`,
+    });
   }
   const forward = to !== "REJECTED" && to !== "BLOCKED";
-  if (forward && facts.parityStatus === "FAIL" && (from === "TRADINGVIEW_VERIFICATION" || from === "PAPER_APPROVAL_REVIEW")) {
-    return err({ code: "HARD_FAIL", detail: "parity FAIL blocks promotion; reject or rework the version" });
+  if (
+    forward &&
+    facts.parityStatus === "FAIL" &&
+    (from === "TRADINGVIEW_VERIFICATION" || from === "PAPER_APPROVAL_REVIEW")
+  ) {
+    return err({
+      code: "HARD_FAIL",
+      detail: "parity FAIL blocks promotion; reject or rework the version",
+    });
   }
   if (forward && facts.pineLintStatus === "FAIL" && to !== "PINE_DEVELOPMENT") {
     return err({ code: "HARD_FAIL", detail: "Pine lint hard errors block promotion" });
   }
   const missing = rule.evidence.filter((req) => !evidenceSatisfied(req, facts, to));
   if (missing.length > 0) {
-    return err({ code: "EVIDENCE_MISSING", detail: `missing evidence: ${missing.join(", ")}`, missing });
+    return err({
+      code: "EVIDENCE_MISSING",
+      detail: `missing evidence: ${missing.join(", ")}`,
+      missing,
+    });
   }
   return ok(rule);
 }

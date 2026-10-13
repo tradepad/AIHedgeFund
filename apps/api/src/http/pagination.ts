@@ -5,7 +5,10 @@ export function encodeCursor(value: Record<string, string | number>): string {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
 }
 
-export function decodeCursor<T extends z.ZodType>(schema: T, cursor: string | undefined): z.infer<T> | null {
+export function decodeCursor<T extends z.ZodType>(
+  schema: T,
+  cursor: string | undefined,
+): z.infer<T> | null {
   if (!cursor) return null;
   try {
     const parsed = schema.safeParse(JSON.parse(Buffer.from(cursor, "base64url").toString("utf8")));
@@ -22,7 +25,11 @@ export const TradeCursor = z.object({ n: z.number().int() });
 export const UpdatedCursor = z.object({ t: z.iso.datetime(), id: z.uuid() });
 
 /** Split a page fetched with limit + 1 rows into items and next cursor. */
-export function page<T>(rows: T[], limit: number, cursorOf: (last: T) => Record<string, string | number>): { items: T[]; nextCursor: string | null } {
+export function page<T>(
+  rows: T[],
+  limit: number,
+  cursorOf: (last: T) => Record<string, string | number>,
+): { items: T[]; nextCursor: string | null } {
   const items = rows.slice(0, limit);
   const last = items.at(-1);
   return { items, nextCursor: rows.length > limit && last ? encodeCursor(cursorOf(last)) : null };

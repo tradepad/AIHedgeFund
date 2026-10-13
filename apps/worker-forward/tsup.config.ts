@@ -11,5 +11,7 @@ export default defineConfig({
   // dependencies are not hoisted under pnpm, so everything is bundled.
   noExternal: [/.*/],
   external: ["pg-native"],
-  banner: { js: "import { createRequire as __arfCreateRequire } from 'node:module'; const require = __arfCreateRequire(import.meta.url);" },
+  banner: {
+    js: "import { createRequire as __arfCreateRequire } from 'node:module'; const require = __arfCreateRequire(import.meta.url);",
+  },
 });

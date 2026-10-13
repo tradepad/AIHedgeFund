@@ -1,5 +1,10 @@
 import { z } from "zod";
-import { IanaTimezoneSchema, SemverSchema, TimeframeSchema, TradingViewSymbolSchema } from "./common";
+import {
+  IanaTimezoneSchema,
+  SemverSchema,
+  TimeframeSchema,
+  TradingViewSymbolSchema,
+} from "./common";
 
 /**
  * Strategy Definition Language (spec §9). Contract between Strategy Architect
@@ -151,28 +156,52 @@ export const StrategyDefinitionSchema = z
     const keys = sdl.parameters.map((p) => p.key);
     const seen = new Set<string>();
     for (const key of keys) {
-      if (seen.has(key)) ctx.addIssue({ code: "custom", path: ["parameters"], message: `duplicate parameter ${key}` });
+      if (seen.has(key))
+        ctx.addIssue({
+          code: "custom",
+          path: ["parameters"],
+          message: `duplicate parameter ${key}`,
+        });
       seen.add(key);
     }
     const referenced = collectParameterRefs(sdl);
     for (const ref of referenced) {
       if (!seen.has(ref.key)) {
-        ctx.addIssue({ code: "custom", path: ref.path, message: `undeclared parameter ${ref.key}` });
+        ctx.addIssue({
+          code: "custom",
+          path: ref.path,
+          message: `undeclared parameter ${ref.key}`,
+        });
       }
     }
     if (sdl.risk.sizingModel === "percent_of_equity" && sdl.risk.sizePercent === undefined) {
-      ctx.addIssue({ code: "custom", path: ["risk", "sizePercent"], message: "required for percent_of_equity" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["risk", "sizePercent"],
+        message: "required for percent_of_equity",
+      });
     }
     if (sdl.strategy.directions.includes("long") && !sdl.signals.longEntry) {
-      ctx.addIssue({ code: "custom", path: ["signals", "longEntry"], message: "required when long direction enabled" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["signals", "longEntry"],
+        message: "required when long direction enabled",
+      });
     }
     if (sdl.strategy.directions.includes("short") && !sdl.signals.shortEntry) {
-      ctx.addIssue({ code: "custom", path: ["signals", "shortEntry"], message: "required when short direction enabled" });
+      ctx.addIssue({
+        code: "custom",
+        path: ["signals", "shortEntry"],
+        message: "required when short direction enabled",
+      });
     }
   });
 export type StrategyDefinition = z.infer<typeof StrategyDefinitionSchema>;
 
-function collectParameterRefs(value: unknown, path: (string | number)[] = []): { key: string; path: (string | number)[] }[] {
+function collectParameterRefs(
+  value: unknown,
+  path: (string | number)[] = [],
+): { key: string; path: (string | number)[] }[] {
   if (value === null || typeof value !== "object") return [];
   const out: { key: string; path: (string | number)[] }[] = [];
   for (const [k, v] of Object.entries(value)) {

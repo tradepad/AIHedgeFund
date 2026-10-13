@@ -6,7 +6,9 @@ export const CreateCampaignRequestSchema = z
   .object({
     name: z.string().trim().min(3).max(120),
     objective: z.string().trim().min(10).max(2000),
-    assetClasses: z.array(z.enum(["crypto", "equity", "fx", "futures", "index", "commodity"])).min(1),
+    assetClasses: z
+      .array(z.enum(["crypto", "equity", "fx", "futures", "index", "commodity"]))
+      .min(1),
     timeframes: z.array(z.string().regex(/^(\d+|\d*[DWM])$/)).min(1),
   })
   .strict();

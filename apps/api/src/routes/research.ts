@@ -24,7 +24,10 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
   app.post("/v1/campaigns", async (request, reply) => {
     const scope = authorise(request, "campaign:write");
     const body = CreateCampaignRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "campaign.create", body, async (tx) => ({ status: 201, body: await campaigns.createCampaign(tx, scope, body) }));
+    return runIdempotent(ctx, request, reply, scope, "campaign.create", body, async (tx) => ({
+      status: 201,
+      body: await campaigns.createCampaign(tx, scope, body),
+    }));
   });
 
   app.get("/v1/campaigns", async (request) => {
@@ -59,20 +62,36 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
     const scope = authorise(request, "idea:write");
     const { id } = IdParams.parse(request.params);
     const body = IngestIdeaCardRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "idea.ingest", { id, body }, async (tx, key) => ({
-      status: 201,
-      body: await campaigns.ingestIdeaCard(ctx, tx, scope, id, body.ideaCard, key),
-    }));
+    return runIdempotent(
+      ctx,
+      request,
+      reply,
+      scope,
+      "idea.ingest",
+      { id, body },
+      async (tx, key) => ({
+        status: 201,
+        body: await campaigns.ingestIdeaCard(ctx, tx, scope, id, body.ideaCard, key),
+      }),
+    );
   });
 
   app.post("/v1/campaigns/:id/ideas/generate", async (request, reply) => {
     const scope = authorise(request, "idea:write");
     const { id } = IdParams.parse(request.params);
     const body = GenerateIdeaRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "idea.generate", { id, body }, async (tx, key) => ({
-      status: 202,
-      body: await campaigns.requestIdeaGeneration(ctx, tx, scope, id, body.objective, key),
-    }));
+    return runIdempotent(
+      ctx,
+      request,
+      reply,
+      scope,
+      "idea.generate",
+      { id, body },
+      async (tx, key) => ({
+        status: 202,
+        body: await campaigns.requestIdeaGeneration(ctx, tx, scope, id, body.objective, key),
+      }),
+    );
   });
 
   app.get("/v1/ideas/:id", async (request) => {
@@ -84,7 +103,10 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
   app.post("/v1/strategies", async (request, reply) => {
     const scope = authorise(request, "strategy:write");
     const body = CreateStrategyRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "strategy.create", body, async (tx) => ({ status: 201, body: await registry.createStrategy(tx, scope, body) }));
+    return runIdempotent(ctx, request, reply, scope, "strategy.create", body, async (tx) => ({
+      status: 201,
+      body: await registry.createStrategy(tx, scope, body),
+    }));
   });
 
   app.get("/v1/strategies/:id", async (request) => {
@@ -96,7 +118,15 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
     const scope = authorise(request, "strategy:write");
     const { id } = IdParams.parse(request.params);
     const body = CreateStrategyVersionRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "version.create", { id, body }, async (tx) => ({ status: 201, body: await registry.createVersion(tx, scope, id, body) }));
+    return runIdempotent(
+      ctx,
+      request,
+      reply,
+      scope,
+      "version.create",
+      { id, body },
+      async (tx) => ({ status: 201, body: await registry.createVersion(tx, scope, id, body) }),
+    );
   });
 
   app.get("/v1/strategy-versions/:id", async (request) => {
@@ -113,7 +143,18 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
     const scope = authorise(request, "strategy:write");
     const { id } = IdParams.parse(request.params);
     const body = PutStrategyDefinitionRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "definition.put", { id, body }, async (tx) => ({ status: 201, body: await registry.putDefinition(ctx, tx, scope, id, body.definition) }));
+    return runIdempotent(
+      ctx,
+      request,
+      reply,
+      scope,
+      "definition.put",
+      { id, body },
+      async (tx) => ({
+        status: 201,
+        body: await registry.putDefinition(ctx, tx, scope, id, body.definition),
+      }),
+    );
   });
 
   app.get("/v1/strategy-versions/:id/definition", async (request) => {
@@ -124,7 +165,13 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
   app.get("/v1/strategy-versions/:id/pine/template", async (request) => {
     const scope = authorise(request, "read");
     const q = z
-      .object({ initialCapital: z.coerce.number().positive().max(1e12).default(10000), currency: z.string().regex(/^[A-Z]{3,5}$/).default("USD") })
+      .object({
+        initialCapital: z.coerce.number().positive().max(1e12).default(10000),
+        currency: z
+          .string()
+          .regex(/^[A-Z]{3,5}$/)
+          .default("USD"),
+      })
       .parse(request.query);
     return registry.pineTemplate(ctx, scope, IdParams.parse(request.params).id, q);
   });
@@ -133,7 +180,10 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
     const scope = authorise(request, "pine:write");
     const { id } = IdParams.parse(request.params);
     const body = PutPineRevisionRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "pine.put", { id, body }, async (tx) => ({ status: 201, body: await registry.putPineRevision(ctx, tx, scope, id, body) }));
+    return runIdempotent(ctx, request, reply, scope, "pine.put", { id, body }, async (tx) => ({
+      status: 201,
+      body: await registry.putPineRevision(ctx, tx, scope, id, body),
+    }));
   });
 
   app.get("/v1/strategy-versions/:id/pine", async (request) => {
@@ -145,10 +195,18 @@ export function researchRoutes(app: FastifyInstance, ctx: AppContext): void {
     const scope = authorise(request, "workflow:transition");
     const { id } = IdParams.parse(request.params);
     const body = TransitionRequestSchema.parse(request.body);
-    return runIdempotent(ctx, request, reply, scope, "version.transition", { id, body }, async (tx, key) => ({
-      status: 200,
-      body: await transitionVersion(ctx, tx, scope, id, body, key),
-    }));
+    return runIdempotent(
+      ctx,
+      request,
+      reply,
+      scope,
+      "version.transition",
+      { id, body },
+      async (tx, key) => ({
+        status: 200,
+        body: await transitionVersion(ctx, tx, scope, id, body, key),
+      }),
+    );
   });
 
   app.get("/v1/strategy-versions/:id/transitions", async (request) => {

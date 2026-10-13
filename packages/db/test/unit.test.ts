@@ -18,7 +18,11 @@ const at = new Date("2026-01-01T00:00:00.000Z");
 
 describe("audit hash chain", () => {
   it("is deterministic and independent of key order", () => {
-    const reordered: AuditInput = { ...input, newState: { state: "PAPER_APPROVED" }, priorState: { state: "PAPER_APPROVAL_REVIEW" } };
+    const reordered: AuditInput = {
+      ...input,
+      newState: { state: "PAPER_APPROVED" },
+      priorState: { state: "PAPER_APPROVAL_REVIEW" },
+    };
     expect(auditHash(null, input, "id-1", at)).toBe(auditHash(null, reordered, "id-1", at));
     expect(auditHash(null, input, "id-1", at)).toMatch(/^[0-9a-f]{64}$/);
   });
@@ -52,7 +56,11 @@ describe("outbox rows", () => {
 
   it("rebuild a contract-valid domain event", () => {
     const event = toDomainEvent(row);
-    expect(event).toMatchObject({ eventId: row.id, eventType: "parity.calculated", aggregateType: "VERIFICATION" });
+    expect(event).toMatchObject({
+      eventId: row.id,
+      eventType: "parity.calculated",
+      aggregateType: "VERIFICATION",
+    });
     expect(event.occurredAt).toMatch(/^2026-01-01T00:00:00(\.000)?Z$/);
   });
 

@@ -3,11 +3,24 @@
 import { field } from "@/lib/form";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { GenerateIdeaResultSchema, IdeaCardRecordSchema, IdeaCardSchema, StrategySchema } from "@arf/contracts";
+import {
+  GenerateIdeaResultSchema,
+  IdeaCardRecordSchema,
+  IdeaCardSchema,
+  StrategySchema,
+} from "@arf/contracts";
 import { ProblemInline } from "@/components/problem-inline";
 import { useCommand } from "@/components/use-command";
 
-export function CampaignActions({ campaignId, ideas, ideaTemplate }: { campaignId: string; ideas: { id: string; title: string }[]; ideaTemplate: string }) {
+export function CampaignActions({
+  campaignId,
+  ideas,
+  ideaTemplate,
+}: {
+  campaignId: string;
+  ideas: { id: string; title: string }[];
+  ideaTemplate: string;
+}) {
   const router = useRouter();
   const ingest = useCommand("POST", IdeaCardRecordSchema);
   const generate = useCommand("POST", GenerateIdeaResultSchema);
@@ -30,13 +43,19 @@ export function CampaignActions({ campaignId, ideas, ideaTemplate }: { campaignI
       setLocalError(card.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; "));
       return;
     }
-    if (await ingest.run(`/v1/campaigns/${campaignId}/ideas`, { ideaCard: card.data })) router.refresh();
+    if (await ingest.run(`/v1/campaigns/${campaignId}/ideas`, { ideaCard: card.data }))
+      router.refresh();
   }
 
   async function submitGenerate(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    if (await generate.run(`/v1/campaigns/${campaignId}/ideas/generate`, { objective: field(f, "objective") })) router.refresh();
+    if (
+      await generate.run(`/v1/campaigns/${campaignId}/ideas/generate`, {
+        objective: field(f, "objective"),
+      })
+    )
+      router.refresh();
   }
 
   async function submitStrategy(e: FormEvent<HTMLFormElement>) {
@@ -56,8 +75,16 @@ export function CampaignActions({ campaignId, ideas, ideaTemplate }: { campaignI
     <div className="grid grid-2">
       <form className="card stack" onSubmit={(e) => void submitIdea(e)} aria-label="Add idea card">
         <h2>Add a structured Idea Card</h2>
-        <p className="muted">The template below is an editable example; replace every field with your own idea. Structured fields are canonical.</p>
-        <textarea rows={14} value={ideaJson} onChange={(e) => setIdeaJson(e.target.value)} aria-label="Idea Card JSON" />
+        <p className="muted">
+          The template below is an editable example; replace every field with your own idea.
+          Structured fields are canonical.
+        </p>
+        <textarea
+          rows={14}
+          value={ideaJson}
+          onChange={(e) => setIdeaJson(e.target.value)}
+          aria-label="Idea Card JSON"
+        />
         {localError ? (
           <div className="notice bad" role="alert">
             {localError}
@@ -71,12 +98,25 @@ export function CampaignActions({ campaignId, ideas, ideaTemplate }: { campaignI
         </div>
       </form>
       <div className="stack">
-        <form className="card stack" onSubmit={(e) => void submitGenerate(e)} aria-label="Generate idea">
+        <form
+          className="card stack"
+          onSubmit={(e) => void submitGenerate(e)}
+          aria-label="Generate idea"
+        >
           <h2>Ask IDEA_SCOUT</h2>
-          <p className="muted">Runs the approved IDEA_SCOUT prompt in the research worker. Output is validated against the Idea Card contract before it is recorded.</p>
+          <p className="muted">
+            Runs the approved IDEA_SCOUT prompt in the research worker. Output is validated against
+            the Idea Card contract before it is recorded.
+          </p>
           <label>
             Objective
-            <input name="objective" required minLength={10} defaultValue="" placeholder="e.g. trend continuation on BTC perpetuals" />
+            <input
+              name="objective"
+              required
+              minLength={10}
+              defaultValue=""
+              placeholder="e.g. trend continuation on BTC perpetuals"
+            />
           </label>
           <ProblemInline problem={generate.problem} />
           <div>
@@ -85,7 +125,11 @@ export function CampaignActions({ campaignId, ideas, ideaTemplate }: { campaignI
             </button>
           </div>
         </form>
-        <form className="card stack" onSubmit={(e) => void submitStrategy(e)} aria-label="Create strategy">
+        <form
+          className="card stack"
+          onSubmit={(e) => void submitStrategy(e)}
+          aria-label="Create strategy"
+        >
           <h2>New strategy</h2>
           <label>
             Name
@@ -93,7 +137,12 @@ export function CampaignActions({ campaignId, ideas, ideaTemplate }: { campaignI
           </label>
           <label>
             Family (snake_case)
-            <input name="family" required pattern="[a-z][a-z0-9_]*" defaultValue="trend_following" />
+            <input
+              name="family"
+              required
+              pattern="[a-z][a-z0-9_]*"
+              defaultValue="trend_following"
+            />
           </label>
           <label>
             From idea

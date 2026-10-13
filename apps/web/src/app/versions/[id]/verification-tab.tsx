@@ -8,9 +8,14 @@ import { apiGet } from "@/lib/server-api";
 import { CreateVerification } from "./create-verification";
 
 export async function VerificationTab({ version }: { version: StrategyVersion }) {
-  const res = await apiGet(`/v1/strategy-versions/${version.id}/verifications`, z.object({ items: z.array(VerificationSchema) }));
+  const res = await apiGet(
+    `/v1/strategy-versions/${version.id}/verifications`,
+    z.object({ items: z.array(VerificationSchema) }),
+  );
   if (!res.ok) return <ProblemView problem={res.problem} />;
-  const canCreate = version.state === "TRADINGVIEW_VERIFICATION" && res.data.items.every((v) => v.status === "PARSE_FAILED");
+  const canCreate =
+    version.state === "TRADINGVIEW_VERIFICATION" &&
+    res.data.items.every((v) => v.status === "PARSE_FAILED");
   return (
     <div className="grid grid-2">
       <section className="card">

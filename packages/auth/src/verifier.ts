@@ -36,9 +36,11 @@ export class DevAuthVerifier implements AuthVerifier {
 
   verify(header: string | undefined): Promise<Result<VerifiedIdentity, AuthFailure>> {
     const token = bearer(header);
-    if (!token) return Promise.resolve(err({ code: "UNAUTHENTICATED", detail: "missing bearer token" }));
+    if (!token)
+      return Promise.resolve(err({ code: "UNAUTHENTICATED", detail: "missing bearer token" }));
     const match = /^dev:(dev\|[a-z0-9_-]{1,64})$/.exec(token);
-    if (!match?.[1]) return Promise.resolve(err({ code: "INVALID_TOKEN", detail: "malformed development token" }));
+    if (!match?.[1])
+      return Promise.resolve(err({ code: "INVALID_TOKEN", detail: "malformed development token" }));
     return Promise.resolve(ok({ subject: match[1], externalOrgId: null }));
   }
 }
@@ -91,7 +93,8 @@ export function createAuthVerifier(config: AuthConfig): AuthVerifier {
     case "dev":
       return new DevAuthVerifier(config.nodeEnv);
     case "clerk":
-      if (!config.clerkSecretKey) throw new Error("CLERK_SECRET_KEY is required when AUTH_MODE=clerk");
+      if (!config.clerkSecretKey)
+        throw new Error("CLERK_SECRET_KEY is required when AUTH_MODE=clerk");
       return new ClerkAuthVerifier({
         secretKey: config.clerkSecretKey,
         authorizedParties: config.clerkAuthorizedParties ?? [],

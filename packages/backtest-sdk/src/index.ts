@@ -1,4 +1,10 @@
-import type { BacktestRunId, ParserWarning, PineManifest, Trade, EquityPoint } from "@arf/contracts";
+import type {
+  BacktestRunId,
+  ParserWarning,
+  PineManifest,
+  Trade,
+  EquityPoint,
+} from "@arf/contracts";
 import { RUNNER_CAPABILITIES, type RunnerCapabilities } from "@arf/pine";
 
 export type { RunnerCapabilities } from "@arf/pine";

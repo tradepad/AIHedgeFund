@@ -16,7 +16,10 @@ export interface CommandResult<T> {
 export function idempotencyKeyOf(request: FastifyRequest): string {
   const key = request.headers["idempotency-key"];
   if (typeof key !== "string" || !/^[\w.:-]{8,200}$/.test(key)) {
-    throw problems.badRequest("IDEMPOTENCY_KEY_REQUIRED", "commands require an Idempotency-Key header (8-200 characters)");
+    throw problems.badRequest(
+      "IDEMPOTENCY_KEY_REQUIRED",
+      "commands require an Idempotency-Key header (8-200 characters)",
+    );
   }
   return key;
 }
@@ -40,7 +43,9 @@ export async function runIdempotent<T>(
   const key = idempotencyKeyOf(request);
   const orgId = scope.principal.organisationId;
   const actorId = scope.principal.userId;
-  const requestHash = sha256Hex(canonicalJson({ commandScope, url: request.url.split("?")[0], body: body ?? null }));
+  const requestHash = sha256Hex(
+    canonicalJson({ commandScope, url: request.url.split("?")[0], body: body ?? null }),
+  );
   const identity = and(
     eq(idempotencyRecords.organisationId, orgId),
     eq(idempotencyRecords.actorId, actorId),
@@ -50,15 +55,30 @@ export async function runIdempotent<T>(
 
   const inserted = await ctx.db
     .insert(idempotencyRecords)
-    .values({ id: uuidv7(), organisationId: orgId, actorId, scope: commandScope, key, requestHash, state: "IN_PROGRESS" })
+    .values({
+      id: uuidv7(),
+      organisationId: orgId,
+      actorId,
+      scope: commandScope,
+      key,
+      requestHash,
+      state: "IN_PROGRESS",
+    })
     .onConflictDoNothing()
     .returning({ id: idempotencyRecords.id });
 
   if (inserted.length === 0) {
     const [existing] = await ctx.db.select().from(idempotencyRecords).where(identity).limit(1);
-    if (!existing) throw problems.conflict("IDEMPOTENCY_IN_PROGRESS", "a request with this key is being processed");
+    if (!existing)
+      throw problems.conflict(
+        "IDEMPOTENCY_IN_PROGRESS",
+        "a request with this key is being processed",
+      );
     if (existing.requestHash !== requestHash) {
-      throw problems.unprocessable("IDEMPOTENCY_KEY_REUSED", "this Idempotency-Key was already used with a different request");
+      throw problems.unprocessable(
+        "IDEMPOTENCY_KEY_REUSED",
+        "this Idempotency-Key was already used with a different request",
+      );
     }
     if (existing.state === "COMPLETED") {
       void reply.status(existing.responseStatus ?? 200).header("idempotency-replayed", "true");
@@ -68,9 +88,19 @@ export async function runIdempotent<T>(
     const reclaimed = await ctx.db
       .update(idempotencyRecords)
       .set({ createdAt: new Date() })
-      .where(and(identity, eq(idempotencyRecords.state, "IN_PROGRESS"), lt(idempotencyRecords.createdAt, new Date(Date.now() - STALE_IN_PROGRESS_MS))))
+      .where(
+        and(
+          identity,
+          eq(idempotencyRecords.state, "IN_PROGRESS"),
+          lt(idempotencyRecords.createdAt, new Date(Date.now() - STALE_IN_PROGRESS_MS)),
+        ),
+      )
       .returning({ id: idempotencyRecords.id });
-    if (reclaimed.length === 0) throw problems.conflict("IDEMPOTENCY_IN_PROGRESS", "a request with this key is being processed");
+    if (reclaimed.length === 0)
+      throw problems.conflict(
+        "IDEMPOTENCY_IN_PROGRESS",
+        "a request with this key is being processed",
+      );
   }
 
   try {
@@ -78,7 +108,12 @@ export async function runIdempotent<T>(
       const out = await command(tx, key);
       await tx
         .update(idempotencyRecords)
-        .set({ state: "COMPLETED", responseStatus: out.status, responseBody: sql`${JSON.stringify(out.body)}::jsonb`, completedAt: new Date() })
+        .set({
+          state: "COMPLETED",
+          responseStatus: out.status,
+          responseBody: sql`${JSON.stringify(out.body)}::jsonb`,
+          completedAt: new Date(),
+        })
         .where(identity);
       return out;
     });
@@ -86,7 +121,9 @@ export async function runIdempotent<T>(
     return result.body;
   } catch (error) {
     // Release the reservation so the client can correct the request and retry.
-    await ctx.db.delete(idempotencyRecords).where(and(identity, eq(idempotencyRecords.state, "IN_PROGRESS")));
+    await ctx.db
+      .delete(idempotencyRecords)
+      .where(and(identity, eq(idempotencyRecords.state, "IN_PROGRESS")));
     throw error;
   }
 }

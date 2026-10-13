@@ -1,6 +1,18 @@
-import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client, NoSuchKey, NotFound } from "@aws-sdk/client-s3";
+import {
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+  NoSuchKey,
+  NotFound,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { ObjectConflictError, type ObjectStore, type PresignRequest, type PresignedPut } from "./object-store";
+import {
+  ObjectConflictError,
+  type ObjectStore,
+  type PresignRequest,
+  type PresignedPut,
+} from "./object-store";
 
 export interface S3Config {
   endpoint?: string | undefined;
@@ -27,10 +39,17 @@ export class S3ObjectStore implements ObjectStore {
   async putImmutable(key: string, bytes: Uint8Array, contentType: string): Promise<void> {
     try {
       await this.client.send(
-        new PutObjectCommand({ Bucket: this.config.bucket, Key: key, Body: bytes, ContentType: contentType, IfNoneMatch: "*" }),
+        new PutObjectCommand({
+          Bucket: this.config.bucket,
+          Key: key,
+          Body: bytes,
+          ContentType: contentType,
+          IfNoneMatch: "*",
+        }),
       );
     } catch (error) {
-      const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata?.httpStatusCode;
+      const status = (error as { $metadata?: { httpStatusCode?: number } }).$metadata
+        ?.httpStatusCode;
       if (status === 412) {
         const existing = await this.get(key);
         if (existing && Buffer.compare(Buffer.from(existing), Buffer.from(bytes)) === 0) return;
@@ -42,7 +61,9 @@ export class S3ObjectStore implements ObjectStore {
 
   async get(key: string): Promise<Uint8Array | null> {
     try {
-      const out = await this.client.send(new GetObjectCommand({ Bucket: this.config.bucket, Key: key }));
+      const out = await this.client.send(
+        new GetObjectCommand({ Bucket: this.config.bucket, Key: key }),
+      );
       return out.Body ? await out.Body.transformToByteArray() : null;
     } catch (error) {
       if (error instanceof NoSuchKey || error instanceof NotFound) return null;

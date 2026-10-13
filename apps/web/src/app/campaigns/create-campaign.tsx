@@ -42,7 +42,13 @@ export function CreateCampaign() {
         <legend className="muted">Asset classes</legend>
         {ASSET_CLASSES.map((a) => (
           <label key={a} className="inline">
-            <input type="checkbox" checked={assets.includes(a)} onChange={(e) => setAssets((xs) => (e.target.checked ? [...xs, a] : xs.filter((x) => x !== a)))} />
+            <input
+              type="checkbox"
+              checked={assets.includes(a)}
+              onChange={(e) =>
+                setAssets((xs) => (e.target.checked ? [...xs, a] : xs.filter((x) => x !== a)))
+              }
+            />
             {a}
           </label>
         ))}

@@ -76,6 +76,12 @@ export function ParityBadge({ status }: { status: ParityStatus | null }) {
   );
 }
 
-export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "info" | "warn" | "good" | "bad"; children: ReactNode }) {
+export function Badge({
+  tone = "neutral",
+  children,
+}: {
+  tone?: "neutral" | "info" | "warn" | "good" | "bad";
+  children: ReactNode;
+}) {
   return <span className={`badge tone-${tone}`}>{children}</span>;
 }

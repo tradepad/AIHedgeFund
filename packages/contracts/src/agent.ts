@@ -29,7 +29,12 @@ export const AgentTaskSchema = z.object({
 });
 export type AgentTask = z.infer<typeof AgentTaskSchema>;
 
-export const AgentRunStatusSchema = z.enum(["RUNNING", "SUCCEEDED", "FAILED_VALIDATION", "FAILED_PROVIDER"]);
+export const AgentRunStatusSchema = z.enum([
+  "RUNNING",
+  "SUCCEEDED",
+  "FAILED_VALIDATION",
+  "FAILED_PROVIDER",
+]);
 
 export const AgentRunSchema = z.object({
   id: z.uuid(),

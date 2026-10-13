@@ -322,7 +322,10 @@ export const strategyVersions = pgTable(
       .notNull()
       .references(() => users.id),
     createdByAgentRunId: uuid("created_by_agent_run_id").references(() => agentRuns.id),
-    contaminatedDatasetIds: text("contaminated_dataset_ids").array().notNull().default(sql`'{}'::text[]`),
+    contaminatedDatasetIds: text("contaminated_dataset_ids")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     lockedAt: ts("locked_at"),
     createdAt: createdAt(),
     updatedAt: ts("updated_at").notNull().defaultNow(),
@@ -330,7 +333,10 @@ export const strategyVersions = pgTable(
   (t) => [
     uniqueIndex("strategy_versions_strategy_number_uq").on(t.strategyId, t.versionNumber),
     index("strategy_versions_org_state_idx").on(t.organisationId, t.state),
-    check("strategy_versions_parent_ck", sql`${t.parentVersionId} IS NULL OR ${t.parentVersionId} <> ${t.id}`),
+    check(
+      "strategy_versions_parent_ck",
+      sql`${t.parentVersionId} IS NULL OR ${t.parentVersionId} <> ${t.id}`,
+    ),
     check("strategy_versions_number_ck", sql`${t.versionNumber} > 0`),
   ],
 );
@@ -449,7 +455,9 @@ export const reportUploads = pgTable(
     parsedArtefactId: uuid("parsed_artefact_id").references(() => artefacts.id),
     parserId: text("parser_id"),
     parserVersion: text("parser_version"),
-    warnings: jsonb("warnings").notNull().default(sql`'[]'::jsonb`),
+    warnings: jsonb("warnings")
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     errorCode: text("error_code"),
     errorDetail: text("error_detail"),
     attestedPineSourceHash: text("attested_pine_source_hash"),
@@ -490,7 +498,9 @@ export const backtestRuns = pgTable(
     initialCapital: money("initial_capital").notNull(),
     currency: text("currency").notNull(),
     parsers: jsonb("parsers").notNull(),
-    warnings: jsonb("warnings").notNull().default(sql`'[]'::jsonb`),
+    warnings: jsonb("warnings")
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     status: jobStatus("status").notNull(),
     errorCode: text("error_code"),
     startedAt: ts("started_at").notNull().defaultNow(),
@@ -612,7 +622,9 @@ export const parityReports = pgTable(
     firstDivergence: jsonb("first_divergence"),
     createdAt: createdAt(),
   },
-  (t) => [uniqueIndex("parity_reports_verification_policy_uq").on(t.verificationId, t.policyVersion)],
+  (t) => [
+    uniqueIndex("parity_reports_verification_policy_uq").on(t.verificationId, t.policyVersion),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -720,7 +732,11 @@ export const outboxEvents = pgTable(
     attempts: integer("attempts").notNull().default(0),
     lastError: text("last_error"),
   },
-  (t) => [index("outbox_events_pending_idx").on(t.createdAt).where(sql`${t.dispatchedAt} IS NULL`)],
+  (t) => [
+    index("outbox_events_pending_idx")
+      .on(t.createdAt)
+      .where(sql`${t.dispatchedAt} IS NULL`),
+  ],
 );
 
 export const idempotencyRecords = pgTable(
@@ -738,7 +754,9 @@ export const idempotencyRecords = pgTable(
     createdAt: createdAt(),
     completedAt: ts("completed_at"),
   },
-  (t) => [uniqueIndex("idempotency_records_identity_uq").on(t.organisationId, t.actorId, t.scope, t.key)],
+  (t) => [
+    uniqueIndex("idempotency_records_identity_uq").on(t.organisationId, t.actorId, t.scope, t.key),
+  ],
 );
 
 export const jobRuns = pgTable(
@@ -796,6 +814,10 @@ export const strategyLibraryReadModel = pgTable(
     updatedAt: ts("updated_at").notNull().defaultNow(),
   },
   (t) => [
-    index("strategy_library_rm_org_updated_idx").on(t.organisationId, t.updatedAt, t.strategyVersionId),
+    index("strategy_library_rm_org_updated_idx").on(
+      t.organisationId,
+      t.updatedAt,
+      t.strategyVersionId,
+    ),
   ],
 );

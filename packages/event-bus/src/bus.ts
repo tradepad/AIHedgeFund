@@ -1,6 +1,16 @@
 import { Queue, Worker, type ConnectionOptions, type Job, type WorkerOptions } from "bullmq";
 import type { DomainEvent } from "@arf/contracts";
-import { JOB_NAMES, JobPayloadSchema, QUEUES, jobIdFor, routesFor, toJobPayload, type JobName, type JobPayload, type QueueName } from "./jobs";
+import {
+  JOB_NAMES,
+  JobPayloadSchema,
+  QUEUES,
+  jobIdFor,
+  routesFor,
+  toJobPayload,
+  type JobName,
+  type JobPayload,
+  type QueueName,
+} from "./jobs";
 
 export const DEFAULT_JOB_OPTIONS = {
   attempts: 5,
@@ -27,7 +37,9 @@ export class EventBus {
   async publish(event: DomainEvent): Promise<number> {
     const routes = routesFor(event);
     for (const route of routes) {
-      await this.queue(route.queue).add(route.name, toJobPayload(event), { jobId: jobIdFor(event, route) });
+      await this.queue(route.queue).add(route.name, toJobPayload(event), {
+        jobId: jobIdFor(event, route),
+      });
     }
     return routes.length;
   }
@@ -35,7 +47,13 @@ export class EventBus {
   async counts(): Promise<Record<string, Record<string, number>>> {
     const out: Record<string, Record<string, number>> = {};
     for (const name of Object.values(QUEUES)) {
-      out[name] = await this.queue(name).getJobCounts("waiting", "active", "delayed", "failed", "completed");
+      out[name] = await this.queue(name).getJobCounts(
+        "waiting",
+        "active",
+        "delayed",
+        "failed",
+        "completed",
+      );
     }
     return out;
   }

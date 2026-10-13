@@ -10,12 +10,24 @@ import { buildApp } from "@arf/api/app";
 import { startOrchestrator, startOutboxRelay } from "@arf/api/background";
 import { ConfigSchema } from "@arf/api/config";
 import { DevAuthVerifier } from "@arf/auth";
-import { DEVELOPMENT_ORGS, createDb, runMigrations, seedOrganisations, seedPrompts, type DbHandle } from "@arf/db";
+import {
+  DEVELOPMENT_ORGS,
+  createDb,
+  runMigrations,
+  seedOrganisations,
+  seedPrompts,
+  type DbHandle,
+} from "@arf/db";
 import { EventBus, QUEUES, redisConnection, startWorker, tracked } from "@arf/event-bus";
 import { createLogger } from "@arf/observability";
 import { LocalObjectStore } from "@arf/storage";
 import { WorkflowEngine } from "@arf/workflow";
-import { handleEquity, handleMetrics, handleParity, handleReadModel } from "@arf/worker-analytics/handlers";
+import {
+  handleEquity,
+  handleMetrics,
+  handleParity,
+  handleReadModel,
+} from "@arf/worker-analytics/handlers";
 import { handleReportParse, handleTradesNormalise } from "@arf/worker-backtest/handlers";
 import { handleAgentRun } from "@arf/worker-research/handlers";
 
@@ -23,7 +35,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const FIXTURES_DIR = join(ROOT, "pine", "fixtures", "tradingview");
 const PROMPT_PATH = join(ROOT, "packages", "agent-runtime", "prompts", "idea-scout", "1.0.0.md");
 
-export const ADMIN_DATABASE_URL = process.env.ARF_TEST_ADMIN_DATABASE_URL ?? "postgres://arf@127.0.0.1:5432/postgres";
+export const ADMIN_DATABASE_URL =
+  process.env.ARF_TEST_ADMIN_DATABASE_URL ?? "postgres://arf@127.0.0.1:5432/postgres";
 /** A dedicated Redis database keeps test queues away from local development. */
 export const TEST_REDIS_URL = process.env.ARF_TEST_REDIS_URL ?? "redis://127.0.0.1:6379/15";
 
@@ -106,7 +119,11 @@ export async function startStack(options: StackOptions = {}): Promise<Stack> {
   const baseUrl = `http://127.0.0.1:${port}`;
   const uploadBaseUrl = options.uploadBaseUrl ?? baseUrl;
   const storageDir = mkdtempSync(join(tmpdir(), "arf-objects-"));
-  const store = new LocalObjectStore(storageDir, "integration-test-signing-secret-0123456789", uploadBaseUrl);
+  const store = new LocalObjectStore(
+    storageDir,
+    "integration-test-signing-secret-0123456789",
+    uploadBaseUrl,
+  );
   const config = ConfigSchema.parse({
     NODE_ENV: "test",
     DATABASE_URL: db.url,
@@ -120,7 +137,15 @@ export async function startStack(options: StackOptions = {}): Promise<Stack> {
   const logger = createLogger("integration", { level: "silent" });
   const bus = new EventBus(redisConnection(TEST_REDIS_URL));
   const workflow = new WorkflowEngine();
-  const app = await buildApp({ config, db: db.handle.db, store, auth: new DevAuthVerifier("test"), workflow, logger, bus });
+  const app = await buildApp({
+    config,
+    db: db.handle.db,
+    store,
+    auth: new DevAuthVerifier("test"),
+    workflow,
+    logger,
+    bus,
+  });
   await app.listen({ port, host: "127.0.0.1" });
 
   const workers: Worker[] = [];
@@ -128,22 +153,61 @@ export async function startStack(options: StackOptions = {}): Promise<Stack> {
   if (options.workers !== false) {
     const conn = redisConnection(TEST_REDIS_URL);
     const d = db.handle.db;
-    const ids = (p: { payload: Record<string, unknown> }) => ({ verificationId: typeof p.payload.verificationId === "string" ? p.payload.verificationId : null });
+    const ids = (p: { payload: Record<string, unknown> }) => ({
+      verificationId:
+        typeof p.payload.verificationId === "string" ? p.payload.verificationId : null,
+    });
     const fast = { concurrency: 4, settings: { backoffStrategy: () => 50 } };
     workers.push(
-      startWorker(QUEUES.backtest, conn, {
-        "report.parse": tracked(d, logger, QUEUES.backtest, ids, ({ payload }) => handleReportParse({ db: d, store }, payload)),
-        "trades.normalise": tracked(d, logger, QUEUES.backtest, ids, ({ payload }) => handleTradesNormalise({ db: d, store }, payload)),
-      }, fast),
-      startWorker(QUEUES.analytics, conn, {
-        "equity.reconstruct": tracked(d, logger, QUEUES.analytics, ids, ({ payload }) => handleEquity({ db: d }, payload)),
-        "metrics.calculate": tracked(d, logger, QUEUES.analytics, ids, ({ payload }) => handleMetrics({ db: d }, payload)),
-        "parity.calculate": tracked(d, logger, QUEUES.analytics, ids, ({ payload }) => handleParity({ db: d }, payload)),
-        "read_model.refresh": tracked(d, logger, QUEUES.analytics, () => ({}), ({ payload }) => handleReadModel({ db: d }, payload)),
-      }, fast),
-      startWorker(QUEUES.research, conn, {
-        "agent.run": tracked(d, logger, QUEUES.research, ids, ({ payload }) => handleAgentRun({ db: d, store, provider: new FixtureModelProvider(options.fixtureMode ?? "valid") }, payload)),
-      }, fast),
+      startWorker(
+        QUEUES.backtest,
+        conn,
+        {
+          "report.parse": tracked(d, logger, QUEUES.backtest, ids, ({ payload }) =>
+            handleReportParse({ db: d, store }, payload),
+          ),
+          "trades.normalise": tracked(d, logger, QUEUES.backtest, ids, ({ payload }) =>
+            handleTradesNormalise({ db: d, store }, payload),
+          ),
+        },
+        fast,
+      ),
+      startWorker(
+        QUEUES.analytics,
+        conn,
+        {
+          "equity.reconstruct": tracked(d, logger, QUEUES.analytics, ids, ({ payload }) =>
+            handleEquity({ db: d }, payload),
+          ),
+          "metrics.calculate": tracked(d, logger, QUEUES.analytics, ids, ({ payload }) =>
+            handleMetrics({ db: d }, payload),
+          ),
+          "parity.calculate": tracked(d, logger, QUEUES.analytics, ids, ({ payload }) =>
+            handleParity({ db: d }, payload),
+          ),
+          "read_model.refresh": tracked(
+            d,
+            logger,
+            QUEUES.analytics,
+            () => ({}),
+            ({ payload }) => handleReadModel({ db: d }, payload),
+          ),
+        },
+        fast,
+      ),
+      startWorker(
+        QUEUES.research,
+        conn,
+        {
+          "agent.run": tracked(d, logger, QUEUES.research, ids, ({ payload }) =>
+            handleAgentRun(
+              { db: d, store, provider: new FixtureModelProvider(options.fixtureMode ?? "valid") },
+              payload,
+            ),
+          ),
+        },
+        fast,
+      ),
       startOrchestrator(d, workflow, TEST_REDIS_URL, logger),
     );
     stopRelay = startOutboxRelay(d, bus, logger, 50);
@@ -165,7 +229,11 @@ export async function startStack(options: StackOptions = {}): Promise<Stack> {
 }
 
 /** Poll until `check` returns a value or the deadline passes. */
-export async function waitFor<T>(what: string, check: () => Promise<T | null | undefined>, timeoutMs = 20_000): Promise<T> {
+export async function waitFor<T>(
+  what: string,
+  check: () => Promise<T | null | undefined>,
+  timeoutMs = 20_000,
+): Promise<T> {
   const deadline = Date.now() + timeoutMs;
   for (;;) {
     const value = await check();

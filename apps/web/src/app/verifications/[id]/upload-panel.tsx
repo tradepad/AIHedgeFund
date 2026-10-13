@@ -2,12 +2,21 @@
 
 import Link from "next/link";
 import { useEffect, useState, type DragEvent } from "react";
-import { PresignedUploadSchema, ReportUploadSchema, VerificationStatusViewSchema, type ReportType, type VerificationStatusView } from "@arf/contracts";
+import {
+  PresignedUploadSchema,
+  ReportUploadSchema,
+  VerificationStatusViewSchema,
+  type ReportType,
+  type VerificationStatusView,
+} from "@arf/contracts";
 import { ProblemInline } from "@/components/problem-inline";
 import { useCommand } from "@/components/use-command";
 import { clientGet } from "@/lib/client-api";
 
-const LABEL: Record<ReportType, string> = { PERFORMANCE_SUMMARY: "Performance Summary", LIST_OF_TRADES: "List of Trades" };
+const LABEL: Record<ReportType, string> = {
+  PERFORMANCE_SUMMARY: "Performance Summary",
+  LIST_OF_TRADES: "List of Trades",
+};
 
 async function sha256Hex(bytes: ArrayBuffer): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", bytes);
@@ -40,7 +49,10 @@ export function UploadPanel({ initial }: { initial: VerificationStatusView }) {
   }, [v.id, done]);
 
   const refresh = async () => {
-    const res = await clientGet(`/v1/tradingview-verifications/${v.id}`, VerificationStatusViewSchema);
+    const res = await clientGet(
+      `/v1/tradingview-verifications/${v.id}`,
+      VerificationStatusViewSchema,
+    );
     if (res.ok) setView(res.data);
   };
 
@@ -54,11 +66,19 @@ export function UploadPanel({ initial }: { initial: VerificationStatusView }) {
       </div>
       {done ? (
         <div className="notice" data-testid="verification-complete">
-          Processing complete. <Link href={`/versions/${v.strategyVersionId}?tab=results`}>View results</Link> · <Link href={`/versions/${v.strategyVersionId}?tab=parity`}>View parity</Link>
+          Processing complete.{" "}
+          <Link href={`/versions/${v.strategyVersionId}?tab=results`}>View results</Link> ·{" "}
+          <Link href={`/versions/${v.strategyVersionId}?tab=parity`}>View parity</Link>
         </div>
       ) : null}
       {v.requiredReportTypes.map((t) => (
-        <ReportSlot key={t} reportType={t} view={view} disabled={done} onChanged={() => void refresh()} />
+        <ReportSlot
+          key={t}
+          reportType={t}
+          view={view}
+          disabled={done}
+          onChanged={() => void refresh()}
+        />
       ))}
       <div>
         <h3>Processing jobs {live ? <span className="muted">· live</span> : null}</h3>
@@ -83,8 +103,20 @@ export function UploadPanel({ initial }: { initial: VerificationStatusView }) {
   );
 }
 
-function ReportSlot({ reportType, view, disabled, onChanged }: { reportType: ReportType; view: VerificationStatusView; disabled: boolean; onChanged: () => void }) {
-  const current = view.uploads.filter((u) => u.reportType === reportType && u.status !== "SUPERSEDED").at(-1);
+function ReportSlot({
+  reportType,
+  view,
+  disabled,
+  onChanged,
+}: {
+  reportType: ReportType;
+  view: VerificationStatusView;
+  disabled: boolean;
+  onChanged: () => void;
+}) {
+  const current = view.uploads
+    .filter((u) => u.reportType === reportType && u.status !== "SUPERSEDED")
+    .at(-1);
   const [file, setFile] = useState<File | null>(null);
   const [active, setActive] = useState(false);
   const [attestHash, setAttestHash] = useState(false);
@@ -109,27 +141,37 @@ function ReportSlot({ reportType, view, disabled, onChanged }: { reportType: Rep
     const bytes = await file.arrayBuffer();
     const sha256 = await sha256Hex(bytes);
     setStep("reserving upload");
-    const slot = await presign.run(`/v1/tradingview-verifications/${view.verification.id}/uploads`, {
-      reportType,
-      fileName: file.name,
-      contentType: "text/csv",
-      sizeBytes: file.size,
-      sha256,
-    });
+    const slot = await presign.run(
+      `/v1/tradingview-verifications/${view.verification.id}/uploads`,
+      {
+        reportType,
+        fileName: file.name,
+        contentType: "text/csv",
+        sizeBytes: file.size,
+        sha256,
+      },
+    );
     if (!slot) return setStep(null);
     setStep("uploading");
-    const put = await fetch(slot.url, { method: slot.method, headers: slot.headers, body: bytes }).catch(() => null);
+    const put = await fetch(slot.url, {
+      method: slot.method,
+      headers: slot.headers,
+      body: bytes,
+    }).catch(() => null);
     if (!put?.ok) {
       setStep(null);
       setError("upload to storage failed; try again");
       return;
     }
     setStep("verifying");
-    const done = await complete.run(`/v1/tradingview-verifications/${view.verification.id}/uploads/complete`, {
-      uploadId: slot.uploadId,
-      attestedPineSourceHash: view.verification.pineSourceHash,
-      attestedSettingsMatch: true,
-    });
+    const done = await complete.run(
+      `/v1/tradingview-verifications/${view.verification.id}/uploads/complete`,
+      {
+        uploadId: slot.uploadId,
+        attestedPineSourceHash: view.verification.pineSourceHash,
+        attestedSettingsMatch: true,
+      },
+    );
     setStep(null);
     if (done) {
       setFile(null);
@@ -180,19 +222,45 @@ function ReportSlot({ reportType, view, disabled, onChanged }: { reportType: Rep
           >
             <label>
               Drop the CSV here or choose a file
-              <input type="file" accept=".csv,text/csv" data-testid={`file-${testId}`} onChange={(e) => setFile(e.target.files?.item(0) ?? null)} />
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                data-testid={`file-${testId}`}
+                onChange={(e) => setFile(e.target.files?.item(0) ?? null)}
+              />
             </label>
-            {file ? <div className="mono">{file.name} · {file.size} bytes</div> : null}
+            {file ? (
+              <div className="mono">
+                {file.name} · {file.size} bytes
+              </div>
+            ) : null}
           </div>
           <label className="inline">
-            <input type="checkbox" checked={attestHash} onChange={(e) => setAttestHash(e.target.checked)} data-testid={`attest-hash-${testId}`} /> The Pine source I ran has hash {view.verification.pineSourceHash.slice(0, 12)}…
+            <input
+              type="checkbox"
+              checked={attestHash}
+              onChange={(e) => setAttestHash(e.target.checked)}
+              data-testid={`attest-hash-${testId}`}
+            />{" "}
+            The Pine source I ran has hash {view.verification.pineSourceHash.slice(0, 12)}…
           </label>
           <label className="inline">
-            <input type="checkbox" checked={attestSettings} onChange={(e) => setAttestSettings(e.target.checked)} data-testid={`attest-settings-${testId}`} /> The chart settings matched the settings listed here
+            <input
+              type="checkbox"
+              checked={attestSettings}
+              onChange={(e) => setAttestSettings(e.target.checked)}
+              data-testid={`attest-settings-${testId}`}
+            />{" "}
+            The chart settings matched the settings listed here
           </label>
           <ProblemInline problem={presign.problem ?? complete.problem} />
           <div className="row">
-            <button type="button" disabled={!file || !attestHash || !attestSettings || step !== null} onClick={() => void upload()} data-testid={`upload-${testId}`}>
+            <button
+              type="button"
+              disabled={!file || !attestHash || !attestSettings || step !== null}
+              onClick={() => void upload()}
+              data-testid={`upload-${testId}`}
+            >
               Upload {LABEL[reportType]}
             </button>
             {step ? <span className="muted">{step}…</span> : null}

@@ -22,15 +22,29 @@ function main(): void {
   const logger = createLogger("worker-analytics", { level: env.LOG_LEVEL });
   const handle = createDb(env.DATABASE_URL);
   const deps = { db: handle.db };
-  const ids = (p: { payload: Record<string, unknown> }) => ({ verificationId: verificationIdOf(p.payload) });
+  const ids = (p: { payload: Record<string, unknown> }) => ({
+    verificationId: verificationIdOf(p.payload),
+  });
   const worker = startWorker(
     QUEUES.analytics,
     redisConnection(env.REDIS_URL),
     {
-      "equity.reconstruct": tracked(handle.db, logger, QUEUES.analytics, ids, ({ payload }) => handleEquity(deps, payload)),
-      "metrics.calculate": tracked(handle.db, logger, QUEUES.analytics, ids, ({ payload }) => handleMetrics(deps, payload)),
-      "parity.calculate": tracked(handle.db, logger, QUEUES.analytics, ids, ({ payload }) => handleParity(deps, payload)),
-      "read_model.refresh": tracked(handle.db, logger, QUEUES.analytics, () => ({}), ({ payload }) => handleReadModel(deps, payload)),
+      "equity.reconstruct": tracked(handle.db, logger, QUEUES.analytics, ids, ({ payload }) =>
+        handleEquity(deps, payload),
+      ),
+      "metrics.calculate": tracked(handle.db, logger, QUEUES.analytics, ids, ({ payload }) =>
+        handleMetrics(deps, payload),
+      ),
+      "parity.calculate": tracked(handle.db, logger, QUEUES.analytics, ids, ({ payload }) =>
+        handleParity(deps, payload),
+      ),
+      "read_model.refresh": tracked(
+        handle.db,
+        logger,
+        QUEUES.analytics,
+        () => ({}),
+        ({ payload }) => handleReadModel(deps, payload),
+      ),
     },
     { concurrency: env.WORKER_CONCURRENCY },
   );
@@ -52,6 +66,8 @@ function main(): void {
 try {
   main();
 } catch (error: unknown) {
-  process.stderr.write(`worker-analytics failed to start: ${error instanceof Error ? error.message : "unknown error"}\n`);
+  process.stderr.write(
+    `worker-analytics failed to start: ${error instanceof Error ? error.message : "unknown error"}\n`,
+  );
   process.exit(1);
 }

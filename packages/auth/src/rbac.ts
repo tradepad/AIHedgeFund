@@ -17,7 +17,15 @@ export type Permission = (typeof PERMISSIONS)[number];
 
 const ROLE_PERMISSIONS: Record<MemberRole, readonly Permission[]> = {
   VIEWER: ["read"],
-  RESEARCHER: ["read", "campaign:write", "idea:write", "strategy:write", "verification:write", "report:upload", "workflow:transition"],
+  RESEARCHER: [
+    "read",
+    "campaign:write",
+    "idea:write",
+    "strategy:write",
+    "verification:write",
+    "report:upload",
+    "workflow:transition",
+  ],
   DEVELOPER: ["read", "strategy:write", "pine:write", "workflow:transition"],
   VALIDATOR: ["read", "audit:read", "protected:read", "workflow:transition"],
   OPERATOR: ["read", "verification:write", "report:upload"],
@@ -40,6 +48,9 @@ export function hasPermission(roles: readonly MemberRole[], permission: Permissi
  * Separation of duties: the actor must not be any of the authors of the work
  * being judged (CLAUDE.md §3.4, spec §17.2).
  */
-export function isIndependentOf(actorUserId: string, authorUserIds: readonly (string | null | undefined)[]): boolean {
+export function isIndependentOf(
+  actorUserId: string,
+  authorUserIds: readonly (string | null | undefined)[],
+): boolean {
   return !authorUserIds.some((id) => id === actorUserId);
 }

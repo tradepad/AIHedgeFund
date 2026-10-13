@@ -92,13 +92,7 @@ export type RunnerType = z.infer<typeof RunnerTypeSchema>;
 export const TradeDirectionSchema = z.enum(["LONG", "SHORT"]);
 export type TradeDirection = z.infer<typeof TradeDirectionSchema>;
 
-export const MetricUnitSchema = z.enum([
-  "CURRENCY",
-  "PERCENT_POINTS",
-  "RATIO",
-  "COUNT",
-  "SECONDS",
-]);
+export const MetricUnitSchema = z.enum(["CURRENCY", "PERCENT_POINTS", "RATIO", "COUNT", "SECONDS"]);
 export type MetricUnit = z.infer<typeof MetricUnitSchema>;
 
 export const MetricSourceSchema = z.enum(["ARF_CALCULATED", "TRADINGVIEW_REPORTED"]);

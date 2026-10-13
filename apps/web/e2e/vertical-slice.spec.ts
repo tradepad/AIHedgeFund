@@ -9,7 +9,15 @@ import { expect, test, type Page } from "@playwright/test";
  * 10 committee decision and audit.
  * The CSVs are synthetic development fixtures, not real TradingView output.
  */
-const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "pine", "fixtures", "tradingview");
+const FIXTURES = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "..",
+  "pine",
+  "fixtures",
+  "tradingview",
+);
 const RUN = Date.now().toString(36);
 
 test.describe.configure({ mode: "serial" });
@@ -18,7 +26,9 @@ async function signInAs(page: Page, who: "researcher" | "committee"): Promise<vo
   await page.context().clearCookies();
   await page.goto("/login");
   await page.getByTestId(`login-${who}`).click();
-  await expect(page.getByTestId("current-user")).toHaveText(who === "researcher" ? "Riley Researcher" : "Casey Committee");
+  await expect(page.getByTestId("current-user")).toHaveText(
+    who === "researcher" ? "Riley Researcher" : "Casey Committee",
+  );
 }
 
 let versionUrl = "";
@@ -32,15 +42,22 @@ test("researcher builds the evidence and committee decides", async ({ page }) =>
   await page.goto("/campaigns");
   const campaign = page.getByRole("form", { name: "Create campaign" });
   await campaign.locator('input[name="name"]').fill(`E2E campaign ${RUN}`);
-  await campaign.locator('textarea[name="objective"]').fill("Find robust crypto trend pullback strategies on BTC perpetuals");
+  await campaign
+    .locator('textarea[name="objective"]')
+    .fill("Find robust crypto trend pullback strategies on BTC perpetuals");
   await campaign.getByRole("button", { name: "Create campaign" }).click();
   await expect(page.getByTestId("campaign-name")).toHaveText(`E2E campaign ${RUN}`);
 
   // 3. Record a structured Idea Card and ask the IDEA_SCOUT fixture provider for another.
-  await page.getByRole("form", { name: "Add idea card" }).getByRole("button", { name: "Record idea" }).click();
+  await page
+    .getByRole("form", { name: "Add idea card" })
+    .getByRole("button", { name: "Record idea" })
+    .click();
   await expect(page.getByTestId("idea-row")).toHaveCount(1);
   const generate = page.getByRole("form", { name: "Generate idea" });
-  await generate.locator('input[name="objective"]').fill("trend continuation on BTC perpetuals after pullbacks");
+  await generate
+    .locator('input[name="objective"]')
+    .fill("trend continuation on BTC perpetuals after pullbacks");
   await generate.getByRole("button", { name: "Request idea" }).click();
   await expect(async () => {
     await page.reload();
@@ -59,7 +76,10 @@ test("researcher builds the evidence and committee decides", async ({ page }) =>
   await version.getByRole("button", { name: "Create version" }).click();
   await expect(page).toHaveURL(/\/versions\/[0-9a-f-]{36}$/);
   versionUrl = page.url();
-  await expect(page.locator("[data-state]").first()).toHaveAttribute("data-state", "HYPOTHESIS_DRAFT");
+  await expect(page.locator("[data-state]").first()).toHaveAttribute(
+    "data-state",
+    "HYPOTHESIS_DRAFT",
+  );
 
   // 5. Attach the Strategy Definition and move to Pine development.
   await page.getByTestId("tab-definition").click();
@@ -77,7 +97,10 @@ test("researcher builds the evidence and committee decides", async ({ page }) =>
   await page.getByTestId("tab-overview").click();
   await expect(page.getByTestId("pine-hash")).toHaveText(/^[0-9a-f]{64}$/);
   await page.getByTestId("transition-TRADINGVIEW_VERIFICATION").click();
-  await expect(page.locator("h1 [data-state]")).toHaveAttribute("data-state", "TRADINGVIEW_VERIFICATION");
+  await expect(page.locator("h1 [data-state]")).toHaveAttribute(
+    "data-state",
+    "TRADINGVIEW_VERIFICATION",
+  );
 
   // 7. Create the TradingView verification.
   await page.getByTestId("tab-verification").click();
@@ -99,10 +122,17 @@ test("researcher builds the evidence and committee decides", async ({ page }) =>
     await page.getByTestId(`upload-${slot}`).click();
     await expect(page.getByTestId(`upload-status-${slot}`)).toContainText(file);
   }
-  await expect(page.getByTestId("verification-status")).toHaveAttribute("data-status", "COMPLETED", { timeout: 60_000 });
+  await expect(page.getByTestId("verification-status")).toHaveAttribute(
+    "data-status",
+    "COMPLETED",
+    { timeout: 60_000 },
+  );
 
   // 9. Results (ledger, equity, metrics) and the parity report.
-  await page.getByTestId("verification-complete").getByRole("link", { name: "View results" }).click();
+  await page
+    .getByTestId("verification-complete")
+    .getByRole("link", { name: "View results" })
+    .click();
   await expect(page.getByTestId("equity-summary")).toContainText("10,201.09");
   await expect(page.getByTestId("metrics-table")).toContainText("net profit");
   await expect(page.getByTestId("trades-table").locator("tbody tr")).toHaveCount(12);
@@ -111,18 +141,29 @@ test("researcher builds the evidence and committee decides", async ({ page }) =>
   await expect(page.locator("h2 [data-parity]")).toHaveAttribute("data-parity", "WARN");
   await page.getByTestId("tab-overview").click();
   await page.getByTestId("transition-PAPER_APPROVAL_REVIEW").click();
-  await expect(page.locator("h1 [data-state]")).toHaveAttribute("data-state", "PAPER_APPROVAL_REVIEW");
+  await expect(page.locator("h1 [data-state]")).toHaveAttribute(
+    "data-state",
+    "PAPER_APPROVAL_REVIEW",
+  );
 
   // 10. An independent committee member records an audited decision.
   await signInAs(page, "committee");
   await page.goto(`${versionUrl}/decision`);
   await expect(page.getByTestId("evidence-summary")).toBeVisible();
-  await expect(page.getByTestId("decision-version")).toContainText(versionUrl.split("/").at(-1) ?? "");
+  await expect(page.getByTestId("decision-version")).toContainText(
+    versionUrl.split("/").at(-1) ?? "",
+  );
   await page.getByTestId("decision-PAPER_APPROVED").check();
-  await page.getByTestId("decision-summary").fill("Parity within tolerance and metrics reproduced independently by ARF.");
-  await page.getByTestId("decision-rejection-case").fill("Only twelve synthetic trades; the sample is far too small to trust.");
+  await page
+    .getByTestId("decision-summary")
+    .fill("Parity within tolerance and metrics reproduced independently by ARF.");
+  await page
+    .getByTestId("decision-rejection-case")
+    .fill("Only twelve synthetic trades; the sample is far too small to trust.");
   await page.getByTestId("decision-override").check();
-  await page.getByTestId("decision-override-reason").fill("Development fixture walk-through; paper stage only, no capital at risk.");
+  await page
+    .getByTestId("decision-override-reason")
+    .fill("Development fixture walk-through; paper stage only, no capital at risk.");
   await page.getByTestId("decision-ack").check();
   await page.getByTestId("decision-submit").click();
   await expect(page.getByTestId("recorded-decision")).toContainText("PAPER APPROVED");

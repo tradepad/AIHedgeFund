@@ -25,10 +25,25 @@ import { VerificationTab } from "./verification-tab";
 
 export const dynamic = "force-dynamic";
 
-const TABS = ["overview", "definition", "pine", "verification", "results", "parity", "lineage", "audit"] as const;
+const TABS = [
+  "overview",
+  "definition",
+  "pine",
+  "verification",
+  "results",
+  "parity",
+  "lineage",
+  "audit",
+] as const;
 type Tab = (typeof TABS)[number];
 
-export default async function VersionPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; cursor?: string }> }) {
+export default async function VersionPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string; cursor?: string }>;
+}) {
   const { id } = await params;
   const sp = await searchParams;
   const tab: Tab = TABS.find((t) => t === sp.tab) ?? "overview";
@@ -40,7 +55,8 @@ export default async function VersionPage({ params, searchParams }: { params: Pr
       <div className="row spread">
         <div>
           <div className="muted">
-            <Link href={`/strategies/${v.strategyId}`}>{v.strategyName}</Link> · version {v.versionNumber}
+            <Link href={`/strategies/${v.strategyId}`}>{v.strategyName}</Link> · version{" "}
+            {v.versionNumber}
             {v.lockedAt ? " · locked for testing" : ""}
           </div>
           <h1>
@@ -58,7 +74,12 @@ export default async function VersionPage({ params, searchParams }: { params: Pr
       </div>
       <nav className="tabs" aria-label="Strategy version sections">
         {TABS.map((t) => (
-          <Link key={t} href={`/versions/${id}?tab=${t}`} aria-current={t === tab ? "page" : undefined} data-testid={`tab-${t}`}>
+          <Link
+            key={t}
+            href={`/versions/${id}?tab=${t}`}
+            aria-current={t === tab ? "page" : undefined}
+            data-testid={`tab-${t}`}
+          >
             {t}
           </Link>
         ))}
@@ -85,9 +106,21 @@ async function renderTab(tab: Tab, v: StrategyVersion, cursor: string | undefine
     case "lineage":
       return <Lineage id={v.id} />;
     case "audit": {
-      const res = await apiGet(`/v1/strategy-versions/${v.id}/audit?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, pageOf(AuditEventSchema));
+      const res = await apiGet(
+        `/v1/strategy-versions/${v.id}/audit?limit=100${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+        pageOf(AuditEventSchema),
+      );
       if (!res.ok) return <ProblemView problem={res.problem} />;
-      return <AuditTable events={res.data.items} nextHref={res.data.nextCursor ? `/versions/${v.id}?tab=audit&cursor=${encodeURIComponent(res.data.nextCursor)}` : null} />;
+      return (
+        <AuditTable
+          events={res.data.items}
+          nextHref={
+            res.data.nextCursor
+              ? `/versions/${v.id}?tab=audit&cursor=${encodeURIComponent(res.data.nextCursor)}`
+              : null
+          }
+        />
+      );
     }
   }
 }
@@ -95,8 +128,14 @@ async function renderTab(tab: Tab, v: StrategyVersion, cursor: string | undefine
 async function Overview({ v }: { v: StrategyVersion }) {
   const [context, transitions, verifications] = await Promise.all([
     apiGet(`/v1/strategy-versions/${v.id}/decision-context`, DecisionContextSchema),
-    apiGet(`/v1/strategy-versions/${v.id}/transitions`, z.object({ items: z.array(TransitionRecordSchema) })),
-    apiGet(`/v1/strategy-versions/${v.id}/verifications`, z.object({ items: z.array(VerificationSchema) })),
+    apiGet(
+      `/v1/strategy-versions/${v.id}/transitions`,
+      z.object({ items: z.array(TransitionRecordSchema) }),
+    ),
+    apiGet(
+      `/v1/strategy-versions/${v.id}/verifications`,
+      z.object({ items: z.array(VerificationSchema) }),
+    ),
   ]);
   return (
     <div className="grid grid-2">
@@ -104,7 +143,13 @@ async function Overview({ v }: { v: StrategyVersion }) {
         <h2>Identity</h2>
         <dl className="kv">
           <dt>Parent</dt>
-          <dd>{v.parentVersionId ? <Link href={`/versions/${v.parentVersionId}`}>{v.parentVersionId}</Link> : "root version"}</dd>
+          <dd>
+            {v.parentVersionId ? (
+              <Link href={`/versions/${v.parentVersionId}`}>{v.parentVersionId}</Link>
+            ) : (
+              "root version"
+            )}
+          </dd>
           <dt>Change reason</dt>
           <dd>{v.changeReason}</dd>
           <dt>SDL hash</dt>
@@ -120,11 +165,18 @@ async function Overview({ v }: { v: StrategyVersion }) {
             <Utc value={v.createdAt} />
           </dd>
         </dl>
-        <NextStep v={v} verificationIds={verifications.ok ? verifications.data.items.map((x) => x.id) : []} />
+        <NextStep
+          v={v}
+          verificationIds={verifications.ok ? verifications.data.items.map((x) => x.id) : []}
+        />
       </section>
       <section className="card stack">
         <h2>Evidence status</h2>
-        {context.ok ? <EvidenceSummary evidence={context.data.evidence} /> : <ProblemView problem={context.problem} />}
+        {context.ok ? (
+          <EvidenceSummary evidence={context.data.evidence} />
+        ) : (
+          <ProblemView problem={context.problem} />
+        )}
       </section>
       <section className="card" style={{ gridColumn: "1 / -1" }}>
         <h2>Lifecycle transitions</h2>
@@ -149,9 +201,13 @@ async function Overview({ v }: { v: StrategyVersion }) {
                   </td>
                   <td>
                     <StateBadge state={t.fromState} /> → <StateBadge state={t.toState} />
-                    {t.humanOverride ? <span className="badge tone-warn">human override</span> : null}
+                    {t.humanOverride ? (
+                      <span className="badge tone-warn">human override</span>
+                    ) : null}
                   </td>
-                  <td className="mono">{t.actorType === "USER" ? `user ${t.actorId.slice(0, 8)}` : t.actorId}</td>
+                  <td className="mono">
+                    {t.actorType === "USER" ? `user ${t.actorId.slice(0, 8)}` : t.actorId}
+                  </td>
                   <td>{t.summary}</td>
                   <td className="mono">{t.policyVersion}</td>
                 </tr>
@@ -168,7 +224,13 @@ function NextStep({ v, verificationIds }: { v: StrategyVersion; verificationIds:
   switch (v.state) {
     case "HYPOTHESIS_DRAFT":
       return v.definitionHash ? (
-        <TransitionButton versionId={v.id} to="PINE_DEVELOPMENT" label="Start Pine development" reasonCode="SDL_COMPLETE" summary="Strategy definition attached" />
+        <TransitionButton
+          versionId={v.id}
+          to="PINE_DEVELOPMENT"
+          label="Start Pine development"
+          reasonCode="SDL_COMPLETE"
+          summary="Strategy definition attached"
+        />
       ) : (
         <p className="muted">
           Next: <Link href={`/versions/${v.id}?tab=definition`}>attach a Strategy Definition</Link>.
@@ -176,7 +238,13 @@ function NextStep({ v, verificationIds }: { v: StrategyVersion; verificationIds:
       );
     case "PINE_DEVELOPMENT":
       return v.pineSourceHash ? (
-        <TransitionButton versionId={v.id} to="TRADINGVIEW_VERIFICATION" label="Request TradingView verification" reasonCode="PINE_READY" summary="Pine revision passed static checks" />
+        <TransitionButton
+          versionId={v.id}
+          to="TRADINGVIEW_VERIFICATION"
+          label="Request TradingView verification"
+          reasonCode="PINE_READY"
+          summary="Pine revision passed static checks"
+        />
       ) : (
         <p className="muted">
           Next: <Link href={`/versions/${v.id}?tab=pine`}>attach a Pine v6 revision</Link>.
@@ -188,15 +256,27 @@ function NextStep({ v, verificationIds }: { v: StrategyVersion; verificationIds:
           <p className="muted">
             {verificationIds.length === 0 ? (
               <>
-                Next: <Link href={`/versions/${v.id}?tab=verification`}>create a TradingView verification</Link>.
+                Next:{" "}
+                <Link href={`/versions/${v.id}?tab=verification`}>
+                  create a TradingView verification
+                </Link>
+                .
               </>
             ) : (
               <>
-                Verification in progress: <Link href={`/verifications/${verificationIds[0] ?? ""}`}>upload exports</Link>.
+                Verification in progress:{" "}
+                <Link href={`/verifications/${verificationIds[0] ?? ""}`}>upload exports</Link>.
               </>
             )}
           </p>
-          <TransitionButton versionId={v.id} to="PAPER_APPROVAL_REVIEW" label="Submit for paper approval review" reasonCode="VERIFICATION_COMPLETE" summary="Verification and parity complete" secondary />
+          <TransitionButton
+            versionId={v.id}
+            to="PAPER_APPROVAL_REVIEW"
+            label="Submit for paper approval review"
+            reasonCode="VERIFICATION_COMPLETE"
+            summary="Verification and parity complete"
+            secondary
+          />
         </div>
       );
     case "PAPER_APPROVAL_REVIEW":
@@ -212,7 +292,10 @@ function NextStep({ v, verificationIds }: { v: StrategyVersion; verificationIds:
 }
 
 async function Lineage({ id }: { id: string }) {
-  const res = await apiGet(`/v1/strategy-versions/${id}/lineage`, z.object({ items: z.array(LineageNodeSchema) }));
+  const res = await apiGet(
+    `/v1/strategy-versions/${id}/lineage`,
+    z.object({ items: z.array(LineageNodeSchema) }),
+  );
   if (!res.ok) return <ProblemView problem={res.problem} />;
   return (
     <div className="card">
@@ -238,9 +321,19 @@ async function Lineage({ id }: { id: string }) {
               </td>
               <td>
                 {n.changeReason}
-                {n.changeCategories.length > 0 ? <div className="muted">{n.changeCategories.join(", ")}: {n.changedFields.join(", ")}</div> : null}
+                {n.changeCategories.length > 0 ? (
+                  <div className="muted">
+                    {n.changeCategories.join(", ")}: {n.changedFields.join(", ")}
+                  </div>
+                ) : null}
               </td>
-              <td>{n.contaminatedData.length > 0 ? n.contaminatedData.join(", ") : <span className="muted">none declared</span>}</td>
+              <td>
+                {n.contaminatedData.length > 0 ? (
+                  n.contaminatedData.join(", ")
+                ) : (
+                  <span className="muted">none declared</span>
+                )}
+              </td>
               <td className="mono">
                 {shortHash(n.definitionHash)} / {shortHash(n.pineSourceHash)}
               </td>

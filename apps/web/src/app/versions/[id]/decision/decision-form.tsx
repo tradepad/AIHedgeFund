@@ -13,7 +13,17 @@ const REASONS: Record<DecisionType, string> = {
   PAPER_APPROVED: "EVIDENCE_SUFFICIENT_FOR_PAPER",
 };
 
-export function DecisionForm({ versionId, parityReportId, canApprove, overridableWarnings }: { versionId: string; parityReportId: string | null; canApprove: boolean; overridableWarnings: string[] }) {
+export function DecisionForm({
+  versionId,
+  parityReportId,
+  canApprove,
+  overridableWarnings,
+}: {
+  versionId: string;
+  parityReportId: string | null;
+  canApprove: boolean;
+  overridableWarnings: string[];
+}) {
   const router = useRouter();
   const [decision, setDecision] = useState<DecisionType>("REJECT");
   const [override, setOverride] = useState(false);
@@ -49,12 +59,24 @@ export function DecisionForm({ versionId, parityReportId, canApprove, overridabl
         <legend className="muted">Decision</legend>
         {(["REJECT", "REWORK_WITH_NEW_VERSION", "PAPER_APPROVED"] as const).map((d) => (
           <label key={d} className="inline">
-            <input type="radio" name="decision" value={d} checked={decision === d} onChange={() => setDecision(d)} disabled={d === "PAPER_APPROVED" && !canApprove} data-testid={`decision-${d}`} />
+            <input
+              type="radio"
+              name="decision"
+              value={d}
+              checked={decision === d}
+              onChange={() => setDecision(d)}
+              disabled={d === "PAPER_APPROVED" && !canApprove}
+              data-testid={`decision-${d}`}
+            />
             {d.replace(/_/g, " ").toLowerCase()}
           </label>
         ))}
       </fieldset>
-      {!canApprove ? <div className="notice bad">Paper approval is unavailable: mandatory evidence is missing or a hard failure is present.</div> : null}
+      {!canApprove ? (
+        <div className="notice bad">
+          Paper approval is unavailable: mandatory evidence is missing or a hard failure is present.
+        </div>
+      ) : null}
       <label>
         Reason codes (comma separated, UPPER_SNAKE)
         <input name="reasonCodes" key={decision} defaultValue={REASONS[decision]} required />
@@ -65,24 +87,47 @@ export function DecisionForm({ versionId, parityReportId, canApprove, overridabl
       </label>
       <label>
         Strongest case for rejection (required for every decision)
-        <textarea name="rejectionCase" rows={3} required minLength={10} data-testid="decision-rejection-case" />
+        <textarea
+          name="rejectionCase"
+          rows={3}
+          required
+          minLength={10}
+          data-testid="decision-rejection-case"
+        />
       </label>
       {needsOverride ? (
         <div className="notice warn stack">
-          <div>Approving with these warnings requires an explicit, audited human override: {overridableWarnings.join(", ")}.</div>
+          <div>
+            Approving with these warnings requires an explicit, audited human override:{" "}
+            {overridableWarnings.join(", ")}.
+          </div>
           <label className="inline">
-            <input type="checkbox" checked={override} onChange={(e) => setOverride(e.target.checked)} data-testid="decision-override" /> I am overriding these warnings
+            <input
+              type="checkbox"
+              checked={override}
+              onChange={(e) => setOverride(e.target.checked)}
+              data-testid="decision-override"
+            />{" "}
+            I am overriding these warnings
           </label>
           {override ? (
             <label>
               Override reason
-              <textarea name="overrideReason" rows={2} required minLength={10} data-testid="decision-override-reason" />
+              <textarea
+                name="overrideReason"
+                rows={2}
+                required
+                minLength={10}
+                data-testid="decision-override-reason"
+              />
             </label>
           ) : null}
         </div>
       ) : null}
       <label className="inline">
-        <input type="checkbox" name="acknowledgement" required data-testid="decision-ack" /> I reviewed the exact version, the mandatory evidence and the hard failures above. A backtest is not a guarantee.
+        <input type="checkbox" name="acknowledgement" required data-testid="decision-ack" /> I
+        reviewed the exact version, the mandatory evidence and the hard failures above. A backtest
+        is not a guarantee.
       </label>
       <ProblemInline problem={problem} />
       <div>

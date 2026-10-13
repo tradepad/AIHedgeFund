@@ -1,5 +1,11 @@
 import { sql, desc, eq } from "drizzle-orm";
-import { canonicalJson, uuidv7, type ActorType, type AggregateType, type AuditAction } from "@arf/contracts";
+import {
+  canonicalJson,
+  uuidv7,
+  type ActorType,
+  type AggregateType,
+  type AuditAction,
+} from "@arf/contracts";
 import { sha256Hex } from "@arf/contracts/node";
 import { auditEvents } from "./schema";
 import type { DbOrTx } from "./client";
@@ -17,7 +23,12 @@ export interface AuditInput {
   traceId: string;
 }
 
-export function auditHash(prevHash: string | null, input: AuditInput, id: string, createdAt: Date): string {
+export function auditHash(
+  prevHash: string | null,
+  input: AuditInput,
+  id: string,
+  createdAt: Date,
+): string {
   return sha256Hex(
     canonicalJson({
       prevHash,
@@ -42,8 +53,13 @@ export function auditHash(prevHash: string | null, input: AuditInput, id: string
  * transaction as the change it records. A per-organisation advisory lock
  * serialises chain appends so `prev_hash` is always the latest record.
  */
-export async function appendAudit(tx: DbOrTx, input: AuditInput): Promise<{ id: string; hash: string }> {
-  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtextextended(${"audit:" + input.organisationId}, 0))`);
+export async function appendAudit(
+  tx: DbOrTx,
+  input: AuditInput,
+): Promise<{ id: string; hash: string }> {
+  await tx.execute(
+    sql`SELECT pg_advisory_xact_lock(hashtextextended(${"audit:" + input.organisationId}, 0))`,
+  );
   const [prev] = await tx
     .select({ hash: auditEvents.hash })
     .from(auditEvents)
@@ -59,7 +75,10 @@ export async function appendAudit(tx: DbOrTx, input: AuditInput): Promise<{ id: 
 }
 
 /** Recompute the hash chain for an organisation. Returns the first broken record id, if any. */
-export async function verifyAuditChain(db: DbOrTx, organisationId: string): Promise<{ valid: boolean; brokenAt: string | null; count: number }> {
+export async function verifyAuditChain(
+  db: DbOrTx,
+  organisationId: string,
+): Promise<{ valid: boolean; brokenAt: string | null; count: number }> {
   const rows = await db
     .select()
     .from(auditEvents)
@@ -84,7 +103,8 @@ export async function verifyAuditChain(db: DbOrTx, organisationId: string): Prom
       row.id,
       row.createdAt,
     );
-    if (row.prevHash !== prev || row.hash !== expected) return { valid: false, brokenAt: row.id, count: rows.length };
+    if (row.prevHash !== prev || row.hash !== expected)
+      return { valid: false, brokenAt: row.id, count: rows.length };
     prev = row.hash;
   }
   return { valid: true, brokenAt: null, count: rows.length };

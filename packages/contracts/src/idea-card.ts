@@ -38,7 +38,11 @@ export const IdeaCardSchema = z
     similarInternalStrategies: z.array(z.uuid()),
     risks: z.array(z.string().min(1)).min(1),
     recommendation: IdeaRecommendationSchema,
-    summary: z.string().min(1).max(600).describe("Human-readable explanatory summary. Structured fields are canonical."),
+    summary: z
+      .string()
+      .min(1)
+      .max(600)
+      .describe("Human-readable explanatory summary. Structured fields are canonical."),
   })
   .strict();
 export type IdeaCard = z.infer<typeof IdeaCardSchema>;

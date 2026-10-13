@@ -52,7 +52,9 @@ export function recomputeTrade(trade: LedgerTradeInput, costs: CostModel): Recom
       commission = value.times(qty).times(2);
       break;
   }
-  const holdingSeconds = Math.round((Date.parse(trade.exitTime) - Date.parse(trade.entryTime)) / 1000);
+  const holdingSeconds = Math.round(
+    (Date.parse(trade.exitTime) - Date.parse(trade.entryTime)) / 1000,
+  );
   return {
     ...trade,
     calcGrossPnl: toStorage(gross),
@@ -63,6 +65,10 @@ export function recomputeTrade(trade: LedgerTradeInput, costs: CostModel): Recom
 }
 
 /** Canonical ledger order: exit time, then trade number. */
-export function sortByExit<T extends { exitTime: string; tradeNumber: number }>(trades: readonly T[]): T[] {
-  return [...trades].sort((a, b) => (a.exitTime === b.exitTime ? a.tradeNumber - b.tradeNumber : a.exitTime < b.exitTime ? -1 : 1));
+export function sortByExit<T extends { exitTime: string; tradeNumber: number }>(
+  trades: readonly T[],
+): T[] {
+  return [...trades].sort((a, b) =>
+    a.exitTime === b.exitTime ? a.tradeNumber - b.tradeNumber : a.exitTime < b.exitTime ? -1 : 1,
+  );
 }

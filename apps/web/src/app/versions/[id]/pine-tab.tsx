@@ -14,12 +14,19 @@ export async function PineTab({ version }: { version: StrategyVersion }) {
           <div className="row spread">
             <h2>Pine Script v{p.pineVersion} (read-only)</h2>
             <div className="row">
-              <Badge tone={p.lintStatus === "PASS" ? "good" : p.lintStatus === "WARN" ? "warn" : "bad"}>lint {p.lintStatus.toLowerCase()}</Badge>
+              <Badge
+                tone={p.lintStatus === "PASS" ? "good" : p.lintStatus === "WARN" ? "warn" : "bad"}
+              >
+                lint {p.lintStatus.toLowerCase()}
+              </Badge>
               <a href={`/arf-api/v1/artefacts/${p.artefactId}/content`}>Download source</a>
             </div>
           </div>
           <div className="mono muted">source sha256 {p.sourceHash}</div>
-          <p className="muted">Load exactly this source in TradingView. The verification upload asks you to attest this hash.</p>
+          <p className="muted">
+            Load exactly this source in TradingView. The verification upload asks you to attest this
+            hash.
+          </p>
           <pre className="code" data-testid="pine-source">
             {p.source}
           </pre>
@@ -34,7 +41,9 @@ export async function PineTab({ version }: { version: StrategyVersion }) {
                 {p.lint.findings.map((f, i) => (
                   <tr key={`${f.rule}-${i}`}>
                     <td>
-                      <Badge tone={f.severity === "ERROR" ? "bad" : "warn"}>{f.severity.toLowerCase()}</Badge>
+                      <Badge tone={f.severity === "ERROR" ? "bad" : "warn"}>
+                        {f.severity.toLowerCase()}
+                      </Badge>
                     </td>
                     <td className="mono">{f.rule}</td>
                     <td>{f.message}</td>
@@ -53,6 +62,11 @@ export async function PineTab({ version }: { version: StrategyVersion }) {
     );
   }
   if (res.problem.status !== 404) return <ProblemView problem={res.problem} />;
-  if (version.state !== "PINE_DEVELOPMENT") return <EmptyState title="No Pine revision attached">Pine is attached during PINE_DEVELOPMENT, after the Strategy Definition.</EmptyState>;
+  if (version.state !== "PINE_DEVELOPMENT")
+    return (
+      <EmptyState title="No Pine revision attached">
+        Pine is attached during PINE_DEVELOPMENT, after the Strategy Definition.
+      </EmptyState>
+    );
   return <PineForm versionId={version.id} />;
 }

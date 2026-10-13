@@ -16,14 +16,18 @@ export const DecimalStringSchema = z
   .regex(/^-?(0|[1-9]\d*)(\.\d+)?$/, "must be a plain decimal string such as '1234.50'");
 export type DecimalString = z.infer<typeof DecimalStringSchema>;
 
-export const Sha256HexSchema = z.string().regex(/^[0-9a-f]{64}$/, "must be a lowercase sha256 hex digest");
+export const Sha256HexSchema = z
+  .string()
+  .regex(/^[0-9a-f]{64}$/, "must be a lowercase sha256 hex digest");
 export type Sha256Hex = z.infer<typeof Sha256HexSchema>;
 
 /** IANA timezone name, e.g. `Etc/UTC`, `America/New_York`. Validated for shape here, existence at service level. */
 export const IanaTimezoneSchema = z.string().regex(/^[A-Za-z]+(?:\/[A-Za-z0-9_+-]+)*$/);
 
 /** TradingView timeframe notation: minutes as digits, or D/W/M with an optional multiplier. */
-export const TimeframeSchema = z.string().regex(/^(\d+|\d*[DWM]|\d+S)$/, "TradingView timeframe such as 60, 240, 1D");
+export const TimeframeSchema = z
+  .string()
+  .regex(/^(\d+|\d*[DWM]|\d+S)$/, "TradingView timeframe such as 60, 240, 1D");
 
 /** TradingView symbol including exchange prefix, e.g. `BYBIT:BTCUSDT.P`. */
 export const TradingViewSymbolSchema = z.string().regex(/^[A-Z0-9_]+:[A-Z0-9._!-]+$/);

@@ -19,7 +19,14 @@ const event = (eventType: DomainEvent["eventType"]): DomainEvent => ({
 
 describe("event routing", () => {
   it("routes the report pipeline in order", () => {
-    const chain = ["report_upload.completed", "verification.reports_parsed", "trades.normalised", "equity.reconstructed", "metrics.calculated", "parity.calculated"] as const;
+    const chain = [
+      "report_upload.completed",
+      "verification.reports_parsed",
+      "trades.normalised",
+      "equity.reconstructed",
+      "metrics.calculated",
+      "parity.calculated",
+    ] as const;
     expect(chain.map((t) => routesFor(event(t))[0]?.name)).toEqual([
       "report.parse",
       "trades.normalise",
@@ -39,7 +46,8 @@ describe("event routing", () => {
   });
 
   it("only routes known event types", () => {
-    for (const key of Object.keys(EVENT_ROUTES)) expect(DomainEventTypeSchema.safeParse(key).success).toBe(true);
+    for (const key of Object.keys(EVENT_ROUTES))
+      expect(DomainEventTypeSchema.safeParse(key).success).toBe(true);
   });
 
   it("produces payloads that validate", () => {

@@ -1,28 +1,56 @@
 import Link from "next/link";
 import { z } from "zod";
-import { BacktestRunViewSchema, EquitySeriesSchema, MetricsViewSchema, TradeSchema, VerificationSchema, pageOf, type MetricSnapshot, type StrategyVersion } from "@arf/contracts";
+import {
+  BacktestRunViewSchema,
+  EquitySeriesSchema,
+  MetricsViewSchema,
+  TradeSchema,
+  VerificationSchema,
+  pageOf,
+  type MetricSnapshot,
+  type StrategyVersion,
+} from "@arf/contracts";
 import { EmptyState, EvidenceLabel, formatDecimal, formatMetric, shortHash } from "@arf/ui";
 import { EquityChart } from "@/components/equity-chart";
 import { ProblemView } from "@/components/problem";
 import { Utc } from "@/components/time";
 import { apiGet } from "@/lib/server-api";
 
-export async function latestRunId(versionId: string): Promise<{ verificationId: string; runId: string | null } | null> {
-  const res = await apiGet(`/v1/strategy-versions/${versionId}/verifications`, z.object({ items: z.array(VerificationSchema) }));
+export async function latestRunId(
+  versionId: string,
+): Promise<{ verificationId: string; runId: string | null } | null> {
+  const res = await apiGet(
+    `/v1/strategy-versions/${versionId}/verifications`,
+    z.object({ items: z.array(VerificationSchema) }),
+  );
   if (!res.ok) return null;
   const v = res.data.items[0];
   return v ? { verificationId: v.id, runId: v.backtestRunId } : null;
 }
 
-export async function ResultsTab({ version, cursor }: { version: StrategyVersion; cursor: string | undefined }) {
+export async function ResultsTab({
+  version,
+  cursor,
+}: {
+  version: StrategyVersion;
+  cursor: string | undefined;
+}) {
   const latest = await latestRunId(version.id);
-  if (!latest?.runId) return <EmptyState title="No results yet">Results appear after a TradingView verification has been uploaded and processed.</EmptyState>;
+  if (!latest?.runId)
+    return (
+      <EmptyState title="No results yet">
+        Results appear after a TradingView verification has been uploaded and processed.
+      </EmptyState>
+    );
   const runId = latest.runId;
   const [run, metrics, equity, trades] = await Promise.all([
     apiGet(`/v1/backtest-runs/${runId}`, BacktestRunViewSchema),
     apiGet(`/v1/backtest-runs/${runId}/metrics`, MetricsViewSchema),
     apiGet(`/v1/backtest-runs/${runId}/equity`, EquitySeriesSchema),
-    apiGet(`/v1/backtest-runs/${runId}/trades?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`, pageOf(TradeSchema)),
+    apiGet(
+      `/v1/backtest-runs/${runId}/trades?limit=50${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ""}`,
+      pageOf(TradeSchema),
+    ),
   ]);
   if (!run.ok) return <ProblemView problem={run.problem} />;
   const r = run.data;
@@ -60,16 +88,30 @@ export async function ResultsTab({ version, cursor }: { version: StrategyVersion
           <h2>Equity and drawdown</h2>
           <EvidenceLabel kind="ARF_CALCULATED" />
         </div>
-        {equity.ok ? <EquityChart series={equity.data} /> : <ProblemView problem={equity.problem} />}
+        {equity.ok ? (
+          <EquityChart series={equity.data} />
+        ) : (
+          <ProblemView problem={equity.problem} />
+        )}
       </section>
       <section className="card">
         <h2>Metrics</h2>
-        {metrics.ok ? <MetricsTable calculated={metrics.data.calculated} reported={metrics.data.reported} currency={r.currency} /> : <ProblemView problem={metrics.problem} />}
+        {metrics.ok ? (
+          <MetricsTable
+            calculated={metrics.data.calculated}
+            reported={metrics.data.reported}
+            currency={r.currency}
+          />
+        ) : (
+          <ProblemView problem={metrics.problem} />
+        )}
       </section>
       <section className="card">
         <div className="row spread">
           <h2>Trade ledger</h2>
-          <span className="muted">Net P&amp;L: TradingView reported vs ARF recomputed from prices and declared costs</span>
+          <span className="muted">
+            Net P&amp;L: TradingView reported vs ARF recomputed from prices and declared costs
+          </span>
         </div>
         {!trades.ok ? (
           <ProblemView problem={trades.problem} />
@@ -109,7 +151,13 @@ export async function ResultsTab({ version, cursor }: { version: StrategyVersion
                 ))}
               </tbody>
             </table>
-            {trades.data.nextCursor ? <Link href={`/versions/${version.id}?tab=results&cursor=${encodeURIComponent(trades.data.nextCursor)}`}>Next trades →</Link> : null}
+            {trades.data.nextCursor ? (
+              <Link
+                href={`/versions/${version.id}?tab=results&cursor=${encodeURIComponent(trades.data.nextCursor)}`}
+              >
+                Next trades →
+              </Link>
+            ) : null}
           </>
         )}
       </section>
@@ -117,11 +165,38 @@ export async function ResultsTab({ version, cursor }: { version: StrategyVersion
   );
 }
 
-const ORDER = ["closed_trade_count", "net_profit", "gross_profit", "gross_loss", "profit_factor", "win_rate_pct", "average_win", "average_loss", "payoff_ratio", "max_drawdown", "max_drawdown_pct", "longest_losing_streak", "average_holding_seconds", "total_return_pct", "commission_paid", "initial_capital"];
+const ORDER = [
+  "closed_trade_count",
+  "net_profit",
+  "gross_profit",
+  "gross_loss",
+  "profit_factor",
+  "win_rate_pct",
+  "average_win",
+  "average_loss",
+  "payoff_ratio",
+  "max_drawdown",
+  "max_drawdown_pct",
+  "longest_losing_streak",
+  "average_holding_seconds",
+  "total_return_pct",
+  "commission_paid",
+  "initial_capital",
+];
 
-function MetricsTable({ calculated, reported, currency }: { calculated: MetricSnapshot[]; reported: MetricSnapshot[]; currency: string }) {
+function MetricsTable({
+  calculated,
+  reported,
+  currency,
+}: {
+  calculated: MetricSnapshot[];
+  reported: MetricSnapshot[];
+  currency: string;
+}) {
   const whole = calculated.filter((m) => m.periodKey === "");
-  const monthly = calculated.filter((m) => m.metricName === "monthly_return_pct" && m.periodKey !== "");
+  const monthly = calculated.filter(
+    (m) => m.metricName === "monthly_return_pct" && m.periodKey !== "",
+  );
   const tv = new Map(reported.map((m) => [m.metricName, m]));
   const version = calculated[0]?.calculationVersion ?? "—";
   return (
@@ -146,12 +221,19 @@ function MetricsTable({ calculated, reported, currency }: { calculated: MetricSn
             return [
               <tr key={name}>
                 <td>
-                  {name.replace(/_/g, " ")} <span className="muted">({m.unit.toLowerCase().replace("_", " ")})</span>
+                  {name.replace(/_/g, " ")}{" "}
+                  <span className="muted">({m.unit.toLowerCase().replace("_", " ")})</span>
                 </td>
                 <td className="num" title={m.undefinedReason ?? undefined}>
                   {formatMetric(m.value, m.unit, currency)}
                 </td>
-                <td className="num">{t ? formatMetric(t.value, t.unit, currency) : <span className="muted">not reported</span>}</td>
+                <td className="num">
+                  {t ? (
+                    formatMetric(t.value, t.unit, currency)
+                  ) : (
+                    <span className="muted">not reported</span>
+                  )}
+                </td>
               </tr>,
             ];
           })}

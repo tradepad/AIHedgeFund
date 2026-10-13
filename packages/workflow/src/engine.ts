@@ -1,5 +1,12 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { err, ok, uuidv7, PineManifestSchema, type Result, type WorkflowState } from "@arf/contracts";
+import {
+  err,
+  ok,
+  uuidv7,
+  PineManifestSchema,
+  type Result,
+  type WorkflowState,
+} from "@arf/contracts";
 import {
   appendAudit,
   backtestRuns,
@@ -70,7 +77,10 @@ interface AggregateRow {
 export class WorkflowEngine {
   readonly policyVersion = WORKFLOW_POLICY_VERSION;
 
-  async transition(tx: DbOrTx, command: TransitionCommand): Promise<Result<TransitionSuccess, TransitionRejection>> {
+  async transition(
+    tx: DbOrTx,
+    command: TransitionCommand,
+  ): Promise<Result<TransitionSuccess, TransitionRejection>> {
     const aggregate = await this.lockAggregate(tx, command);
     if (!aggregate) return err({ code: "NOT_FOUND", detail: `${command.aggregate} not found` });
 
@@ -80,7 +90,11 @@ export class WorkflowEngine {
       .where(eq(stateTransitions.transitionKey, command.transitionKey))
       .limit(1);
     if (existing) {
-      if (existing.aggregateId === command.aggregateId && existing.fromState === command.from && existing.toState === command.to) {
+      if (
+        existing.aggregateId === command.aggregateId &&
+        existing.fromState === command.from &&
+        existing.toState === command.to
+      ) {
         return ok({
           transitionId: existing.id,
           from: existing.fromState,
@@ -90,11 +104,17 @@ export class WorkflowEngine {
           replayed: true,
         });
       }
-      return err({ code: "IDEMPOTENCY_CONFLICT", detail: "transition key was used for a different transition" });
+      return err({
+        code: "IDEMPOTENCY_CONFLICT",
+        detail: "transition key was used for a different transition",
+      });
     }
 
     if (aggregate.state !== command.from) {
-      return err({ code: "STALE_STATE", detail: `expected ${command.from} but current state is ${aggregate.state}` });
+      return err({
+        code: "STALE_STATE",
+        detail: `expected ${command.from} but current state is ${aggregate.state}`,
+      });
     }
 
     const facts = await this.loadFacts(tx, command, aggregate);
@@ -137,7 +157,10 @@ export class WorkflowEngine {
         })
         .where(eq(strategyVersions.id, command.aggregateId));
     } else {
-      await tx.update(researchTasks).set({ state: command.to, updatedAt: now }).where(eq(researchTasks.id, command.aggregateId));
+      await tx
+        .update(researchTasks)
+        .set({ state: command.to, updatedAt: now })
+        .where(eq(researchTasks.id, command.aggregateId));
     }
 
     await appendAudit(tx, {
@@ -168,7 +191,12 @@ export class WorkflowEngine {
       causationId: transitionId,
       actor: { type: command.actor.type, id: command.actor.id },
       traceId: command.traceId,
-      payload: { from: command.from, to: command.to, transitionId, policyVersion: WORKFLOW_POLICY_VERSION },
+      payload: {
+        from: command.from,
+        to: command.to,
+        transitionId,
+        policyVersion: WORKFLOW_POLICY_VERSION,
+      },
     });
 
     return ok({
@@ -181,12 +209,20 @@ export class WorkflowEngine {
     });
   }
 
-  private async lockAggregate(tx: DbOrTx, command: TransitionCommand): Promise<AggregateRow | null> {
+  private async lockAggregate(
+    tx: DbOrTx,
+    command: TransitionCommand,
+  ): Promise<AggregateRow | null> {
     if (command.aggregate === "STRATEGY_VERSION") {
       const [row] = await tx
         .select()
         .from(strategyVersions)
-        .where(and(eq(strategyVersions.id, command.aggregateId), eq(strategyVersions.organisationId, command.organisationId)))
+        .where(
+          and(
+            eq(strategyVersions.id, command.aggregateId),
+            eq(strategyVersions.organisationId, command.organisationId),
+          ),
+        )
         .for("update");
       if (!row) return null;
       return {
@@ -201,13 +237,29 @@ export class WorkflowEngine {
     const [row] = await tx
       .select()
       .from(researchTasks)
-      .where(and(eq(researchTasks.id, command.aggregateId), eq(researchTasks.organisationId, command.organisationId)))
+      .where(
+        and(
+          eq(researchTasks.id, command.aggregateId),
+          eq(researchTasks.organisationId, command.organisationId),
+        ),
+      )
       .for("update");
     if (!row) return null;
-    return { state: row.state, authorUserIds: [], definitionHash: null, symbol: null, timeframe: null, strategyId: null };
+    return {
+      state: row.state,
+      authorUserIds: [],
+      definitionHash: null,
+      symbol: null,
+      timeframe: null,
+      strategyId: null,
+    };
   }
 
-  private async loadFacts(tx: DbOrTx, command: TransitionCommand, aggregate: AggregateRow): Promise<EvidenceFacts> {
+  private async loadFacts(
+    tx: DbOrTx,
+    command: TransitionCommand,
+    aggregate: AggregateRow,
+  ): Promise<EvidenceFacts> {
     const facts: EvidenceFacts = {
       hasStrategyDefinition: false,
       pineLintStatus: null,
@@ -227,8 +279,14 @@ export class WorkflowEngine {
     if (command.aggregate === "STRATEGY_VERSION") {
       const versionId = command.aggregateId;
       // Authors are always loaded, independent of the evidence offered.
-      const [sdl] = await tx.select().from(strategyDefinitions).where(eq(strategyDefinitions.strategyVersionId, versionId));
-      const [pine] = await tx.select().from(pineRevisions).where(eq(pineRevisions.strategyVersionId, versionId));
+      const [sdl] = await tx
+        .select()
+        .from(strategyDefinitions)
+        .where(eq(strategyDefinitions.strategyVersionId, versionId));
+      const [pine] = await tx
+        .select()
+        .from(pineRevisions)
+        .where(eq(pineRevisions.strategyVersionId, versionId));
       if (sdl) facts.authorUserIds.push(sdl.createdBy);
       if (pine) facts.authorUserIds.push(pine.createdBy);
 
@@ -250,9 +308,16 @@ export class WorkflowEngine {
             manifest.data.sdlHash === aggregate.definitionHash;
         }
         const parity = await tx
-          .select({ id: parityReports.id, status: parityReports.status, runId: parityReports.backtestRunId })
+          .select({
+            id: parityReports.id,
+            status: parityReports.status,
+            runId: parityReports.backtestRunId,
+          })
           .from(parityReports)
-          .innerJoin(tradingviewVerifications, eq(tradingviewVerifications.id, parityReports.verificationId))
+          .innerJoin(
+            tradingviewVerifications,
+            eq(tradingviewVerifications.id, parityReports.verificationId),
+          )
           .where(
             and(
               inArray(parityReports.id, ids),
@@ -267,7 +332,13 @@ export class WorkflowEngine {
         const runs = await tx
           .select({ id: backtestRuns.id })
           .from(backtestRuns)
-          .where(and(inArray(backtestRuns.id, ids), eq(backtestRuns.organisationId, org), eq(backtestRuns.strategyVersionId, versionId)));
+          .where(
+            and(
+              inArray(backtestRuns.id, ids),
+              eq(backtestRuns.organisationId, org),
+              eq(backtestRuns.strategyVersionId, versionId),
+            ),
+          );
         for (const run of runs) {
           resolved.add(run.id);
           const [metric] = await tx
@@ -303,7 +374,13 @@ export class WorkflowEngine {
       const cards = await tx
         .select({ id: ideaCards.id })
         .from(ideaCards)
-        .where(and(inArray(ideaCards.id, ids), eq(ideaCards.organisationId, org), eq(ideaCards.taskId, command.aggregateId)));
+        .where(
+          and(
+            inArray(ideaCards.id, ids),
+            eq(ideaCards.organisationId, org),
+            eq(ideaCards.taskId, command.aggregateId),
+          ),
+        );
       for (const c of cards) {
         resolved.add(c.id);
         facts.ideaCardPresent = true;
@@ -314,7 +391,12 @@ export class WorkflowEngine {
       const [blocked] = await tx
         .select({ fromState: stateTransitions.fromState })
         .from(stateTransitions)
-        .where(and(eq(stateTransitions.aggregateId, command.aggregateId), eq(stateTransitions.toState, "BLOCKED")))
+        .where(
+          and(
+            eq(stateTransitions.aggregateId, command.aggregateId),
+            eq(stateTransitions.toState, "BLOCKED"),
+          ),
+        )
         .orderBy(desc(stateTransitions.createdAt), desc(stateTransitions.id))
         .limit(1);
       facts.preBlockState = blocked?.fromState ?? null;

@@ -11,12 +11,25 @@ describe("web session cookie", () => {
   it("rejects tampered or malformed cookies instead of trusting them", () => {
     expect(parseSession(undefined)).toBeNull();
     expect(parseSession("not-base64-json")).toBeNull();
-    expect(parseSession(Buffer.from(JSON.stringify({ subject: "clerk|user_1", org: "arf-dev" })).toString("base64url"))).toBeNull();
-    expect(parseSession(Buffer.from(JSON.stringify({ subject: "dev|admin", org: "../evil" })).toString("base64url"))).toBeNull();
+    expect(
+      parseSession(
+        Buffer.from(JSON.stringify({ subject: "clerk|user_1", org: "arf-dev" })).toString(
+          "base64url",
+        ),
+      ),
+    ).toBeNull();
+    expect(
+      parseSession(
+        Buffer.from(JSON.stringify({ subject: "dev|admin", org: "../evil" })).toString("base64url"),
+      ),
+    ).toBeNull();
   });
 
   it("sends the organisation as a hint the API verifies against membership", () => {
-    expect(authHeaders({ subject: "dev|researcher", org: "arf-dev" })).toEqual({ authorization: "Bearer dev:dev|researcher", "x-arf-org": "arf-dev" });
+    expect(authHeaders({ subject: "dev|researcher", org: "arf-dev" })).toEqual({
+      authorization: "Bearer dev:dev|researcher",
+      "x-arf-org": "arf-dev",
+    });
   });
 });
 

@@ -48,7 +48,15 @@ export const EventPayloads = {
   "trades.normalised": z.object({ verificationId: z.uuid(), backtestRunId: z.uuid() }),
   "equity.reconstructed": z.object({ verificationId: z.uuid(), backtestRunId: z.uuid() }),
   "metrics.calculated": z.object({ verificationId: z.uuid(), backtestRunId: z.uuid() }),
-  "parity.calculated": z.object({ verificationId: z.uuid(), backtestRunId: z.uuid(), parityReportId: z.uuid() }),
+  "parity.calculated": z.object({
+    verificationId: z.uuid(),
+    backtestRunId: z.uuid(),
+    parityReportId: z.uuid(),
+  }),
   "agent_run.requested": z.object({ taskId: z.uuid(), agentRunId: z.uuid() }),
-  "agent_run.completed": z.object({ taskId: z.uuid(), agentRunId: z.uuid(), ideaCardId: z.uuid().nullable() }),
+  "agent_run.completed": z.object({
+    taskId: z.uuid(),
+    agentRunId: z.uuid(),
+    ideaCardId: z.uuid().nullable(),
+  }),
 } as const;

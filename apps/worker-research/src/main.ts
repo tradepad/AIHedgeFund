@@ -34,12 +34,16 @@ function main(): void {
   const logger = createLogger("worker-research", { level: env.LOG_LEVEL });
   const handle = createDb(env.DATABASE_URL);
   const deps = { db: handle.db, store: createObjectStore(env), provider: createProvider(env) };
-  const ids = (p: { payload: Record<string, unknown> }) => ({ verificationId: verificationIdOf(p.payload) });
+  const ids = (p: { payload: Record<string, unknown> }) => ({
+    verificationId: verificationIdOf(p.payload),
+  });
   const worker = startWorker(
     QUEUES.research,
     redisConnection(env.REDIS_URL),
     {
-      "agent.run": tracked(handle.db, logger, QUEUES.research, ids, ({ payload }) => handleAgentRun(deps, payload)),
+      "agent.run": tracked(handle.db, logger, QUEUES.research, ids, ({ payload }) =>
+        handleAgentRun(deps, payload),
+      ),
     },
     { concurrency: env.WORKER_CONCURRENCY },
   );
@@ -61,6 +65,8 @@ function main(): void {
 try {
   main();
 } catch (error: unknown) {
-  process.stderr.write(`worker-research failed to start: ${error instanceof Error ? error.message : "unknown error"}\n`);
+  process.stderr.write(
+    `worker-research failed to start: ${error instanceof Error ? error.message : "unknown error"}\n`,
+  );
   process.exit(1);
 }

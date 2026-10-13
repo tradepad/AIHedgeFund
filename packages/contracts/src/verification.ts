@@ -53,7 +53,10 @@ export const CreateVerificationRequestSchema = z
     dateOrderHint: DateOrderSchema.optional(),
   })
   .strict()
-  .refine((v) => v.dateFrom < v.dateTo, { message: "dateFrom must precede dateTo", path: ["dateTo"] });
+  .refine((v) => v.dateFrom < v.dateTo, {
+    message: "dateFrom must precede dateTo",
+    path: ["dateTo"],
+  });
 export type CreateVerificationRequest = z.infer<typeof CreateVerificationRequestSchema>;
 
 export const VerificationSchema = z.object({

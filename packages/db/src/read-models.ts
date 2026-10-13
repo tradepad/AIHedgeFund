@@ -12,7 +12,12 @@ import {
   tradingviewVerifications,
 } from "./schema";
 
-const LIBRARY_METRICS = ["closed_trade_count", "net_profit", "max_drawdown_pct", "profit_factor"] as const;
+const LIBRARY_METRICS = [
+  "closed_trade_count",
+  "net_profit",
+  "max_drawdown_pct",
+  "profit_factor",
+] as const;
 
 function assetClassOf(content: unknown): string | null {
   if (typeof content !== "object" || content === null || !("market" in content)) return null;
@@ -26,7 +31,11 @@ function assetClassOf(content: unknown): string | null {
  * derived and disposable: it is never a source of truth and can be rebuilt at
  * any time. Metrics shown are ARF-calculated values for the latest run only.
  */
-export async function refreshStrategyLibraryRow(db: DbOrTx, strategyVersionId: string, metricsCalculationVersion: string): Promise<void> {
+export async function refreshStrategyLibraryRow(
+  db: DbOrTx,
+  strategyVersionId: string,
+  metricsCalculationVersion: string,
+): Promise<void> {
   const [row] = await db
     .select({ version: strategyVersions, strategy: strategies })
     .from(strategyVersions)
@@ -34,7 +43,10 @@ export async function refreshStrategyLibraryRow(db: DbOrTx, strategyVersionId: s
     .where(eq(strategyVersions.id, strategyVersionId));
   if (!row) return;
   const { version, strategy } = row;
-  const [sdl] = await db.select({ content: strategyDefinitions.content }).from(strategyDefinitions).where(eq(strategyDefinitions.strategyVersionId, version.id));
+  const [sdl] = await db
+    .select({ content: strategyDefinitions.content })
+    .from(strategyDefinitions)
+    .where(eq(strategyDefinitions.strategyVersionId, version.id));
   const [verification] = await db
     .select({ id: tradingviewVerifications.id })
     .from(tradingviewVerifications)
@@ -44,9 +56,17 @@ export async function refreshStrategyLibraryRow(db: DbOrTx, strategyVersionId: s
   let parityStatus: (typeof parityReports.$inferSelect)["status"] | null = null;
   const metrics = new Map<string, string | null>();
   if (verification) {
-    const [parity] = await db.select({ status: parityReports.status }).from(parityReports).where(eq(parityReports.verificationId, verification.id)).orderBy(desc(parityReports.createdAt)).limit(1);
+    const [parity] = await db
+      .select({ status: parityReports.status })
+      .from(parityReports)
+      .where(eq(parityReports.verificationId, verification.id))
+      .orderBy(desc(parityReports.createdAt))
+      .limit(1);
     parityStatus = parity?.status ?? null;
-    const [run] = await db.select({ id: backtestRuns.id }).from(backtestRuns).where(eq(backtestRuns.verificationId, verification.id));
+    const [run] = await db
+      .select({ id: backtestRuns.id })
+      .from(backtestRuns)
+      .where(eq(backtestRuns.verificationId, verification.id));
     if (run) {
       const values = await db
         .select({ name: metricSnapshots.metricName, value: metricSnapshots.value })
@@ -64,7 +84,10 @@ export async function refreshStrategyLibraryRow(db: DbOrTx, strategyVersionId: s
       for (const v of values) metrics.set(v.name, v.value);
     }
   }
-  const [decision] = await db.select({ decision: committeeDecisions.decision }).from(committeeDecisions).where(eq(committeeDecisions.strategyVersionId, version.id));
+  const [decision] = await db
+    .select({ decision: committeeDecisions.decision })
+    .from(committeeDecisions)
+    .where(eq(committeeDecisions.strategyVersionId, version.id));
   const tradeCount = metrics.get("closed_trade_count");
   const values = {
     organisationId: version.organisationId,

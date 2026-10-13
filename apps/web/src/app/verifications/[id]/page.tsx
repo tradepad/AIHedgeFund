@@ -27,7 +27,10 @@ export default async function VerificationPage({ params }: { params: Promise<{ i
       <div className="grid grid-2">
         <section className="card">
           <h2>Reproduce these settings in TradingView</h2>
-          <p className="muted">Load the exact Pine source below into the Strategy Tester, apply these properties, then export the Performance Summary and List of Trades as CSV.</p>
+          <p className="muted">
+            Load the exact Pine source below into the Strategy Tester, apply these properties, then
+            export the Performance Summary and List of Trades as CSV.
+          </p>
           <dl className="kv" data-testid="verification-settings">
             <dt>Pine source hash</dt>
             <dd className="mono" data-testid="pine-source-hash">
@@ -49,7 +52,8 @@ export default async function VerificationPage({ params }: { params: Promise<{ i
             </dd>
             <dt>Commission</dt>
             <dd>
-              {s.commissionValue} {s.commissionType === "percent" ? "% per side" : s.commissionType.replace(/_/g, " ")}
+              {s.commissionValue}{" "}
+              {s.commissionType === "percent" ? "% per side" : s.commissionType.replace(/_/g, " ")}
             </dd>
             <dt>Slippage</dt>
             <dd>{s.slippageTicks} ticks</dd>

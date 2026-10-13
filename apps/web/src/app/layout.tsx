@@ -4,7 +4,10 @@ import { currentSession, userLabel } from "@/lib/session";
 import { signOut } from "./login/actions";
 import "./globals.css";
 
-export const metadata = { title: "ARF-OS", description: "Research operating system for systematic strategies" };
+export const metadata = {
+  title: "ARF-OS",
+  description: "Research operating system for systematic strategies",
+};
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const session = await currentSession();
@@ -33,7 +36,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </header>
         ) : null}
         <div className="banner" role="note">
-          Research platform. Results are historical simulations or paper evidence, never live performance or a guarantee.
+          Research platform. Results are historical simulations or paper evidence, never live
+          performance or a guarantee.
         </div>
         <main className="page">{children}</main>
       </body>
