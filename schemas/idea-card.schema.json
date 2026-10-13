@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 160
+    },
+    "hypothesis": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 400
+    },
+    "sourceSummary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "sources": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "licence": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "retrievedAt": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          }
+        },
+        "required": [
+          "url",
+          "licence",
+          "retrievedAt"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "marketMechanism": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1000
+    },
+    "expectedDirection": {
+      "type": "string",
+      "enum": [
+        "long",
+        "short",
+        "both"
+      ]
+    },
+    "targetAssets": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "targetTimeframes": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(\\d+|\\d*[DWM]|\\d+S)$"
+      }
+    },
+    "expectedRegime": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "failureRegime": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "requiredInputs": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "pineFeasibility": {
+      "type": "string",
+      "enum": [
+        "HIGH",
+        "MEDIUM",
+        "LOW",
+        "INFEASIBLE"
+      ]
+    },
+    "expectedTradeFrequency": {
+      "type": "string",
+      "enum": [
+        "INTRADAY",
+        "DAILY",
+        "WEEKLY",
+        "MONTHLY",
+        "RARE"
+      ]
+    },
+    "cheapestFalsificationTest": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 1000
+    },
+    "noveltyScore": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "evidenceStrength": {
+      "type": "string",
+      "enum": [
+        "STRONG",
+        "MODERATE",
+        "WEAK",
+        "ANECDOTAL"
+      ]
+    },
+    "similarInternalStrategies": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "format": "uuid",
+        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+      }
+    },
+    "risks": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "RESEARCH",
+        "PARK",
+        "REJECT"
+      ]
+    },
+    "summary": {
+      "description": "Human-readable explanatory summary. Structured fields are canonical.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 600
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "title",
+    "hypothesis",
+    "sourceSummary",
+    "sources",
+    "marketMechanism",
+    "expectedDirection",
+    "targetAssets",
+    "targetTimeframes",
+    "expectedRegime",
+    "failureRegime",
+    "requiredInputs",
+    "pineFeasibility",
+    "expectedTradeFrequency",
+    "cheapestFalsificationTest",
+    "noveltyScore",
+    "evidenceStrength",
+    "similarInternalStrategies",
+    "risks",
+    "recommendation",
+    "summary"
+  ],
+  "additionalProperties": false,
+  "$id": "https://arf-os.dev/schemas/idea-card/1.0.0"
+}

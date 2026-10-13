@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+**/dist
+**/.next
+**/drizzle/meta
+*.md
+pine/
+packages/pine/fixtures/
