@@ -506,6 +506,7 @@ verification; they are development fixtures, not real TradingView output.
 | `pnpm test:integration` | API, outbox, BullMQ workers and orchestrator against throwaway PostgreSQL databases and Redis db 15 |
 | `pnpm test:e2e` | Playwright journey through the ten user steps against a fresh stack |
 | `pnpm build` | Production builds of every app |
+| `pnpm import:external <bundle.json> [--org slug] [--as subject] [--dry-run]` | Import research done outside ARF-OS as external evidence (ADR 0005) |
 
 Further reading:
 

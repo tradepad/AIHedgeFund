@@ -24,6 +24,7 @@ approved IDEA_SCOUT prompt with `pnpm db:seed`.
 | Registry | `strategies`, `strategy_versions`, `strategy_lineage`, `strategy_definitions`, `pine_revisions` | One definition and one Pine revision per version, write-once |
 | Verification | `tradingview_verifications`, `report_uploads` | Settings snapshot and hash; superseded uploads are kept |
 | Results | `backtest_runs`, `trades`, `equity_points`, `drawdown_points`, `metric_snapshots`, `parity_reports` | Calculated and TradingView-reported metrics are separate rows (`source`) |
+| External evidence | `external_import_batches`, `external_strategy_imports`, `external_backtest_results` | Research done outside ARF-OS; never ARF metrics or workflow evidence (ADR 0005) |
 | Governance | `state_transitions`, `committee_decisions`, `audit_events` | Decisions unique per version; audit is a per-organisation hash chain |
 | Infrastructure | `artefacts`, `outbox_events`, `idempotency_records`, `job_runs` | |
 | Read models | `strategy_library_rm` | Rebuilt by `read_model.refresh`; never a source of truth |
@@ -33,8 +34,8 @@ approved IDEA_SCOUT prompt with `pnpm db:seed`.
 - **Append-only / immutable rows.** Updates and deletes raise `ARF_IMMUTABLE`
   on `audit_events`, `artefacts`, `strategy_definitions`, `pine_revisions`,
   `strategy_lineage`, `state_transitions`, `committee_decisions`,
-  `parity_reports`, `trades`, `equity_points`, `drawdown_points` and
-  `metric_snapshots`.
+  `parity_reports`, `trades`, `equity_points`, `drawdown_points`,
+  `metric_snapshots` and the three `external_*` tables.
 - **Strategy versions.** Identity fields (symbol, timeframe, parent, hashes
   once set) cannot change, deletes are refused, and `state` can only change
   inside a transaction that also records a `state_transitions` row

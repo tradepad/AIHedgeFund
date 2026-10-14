@@ -175,6 +175,9 @@ test("researcher builds the evidence and committee decides", async ({ page }) =>
   await expect(page.getByTestId("audit-table")).toContainText("HUMAN_OVERRIDE");
   await page.getByTestId("tab-lineage").click();
   await expect(page.getByTestId("lineage-table")).toBeVisible();
+  // A version built in ARF-OS has no imported evidence, and the tab says so.
+  await page.getByTestId("tab-external").click();
+  await expect(page.getByText("No external evidence")).toBeVisible();
   await page.goto("/strategies");
   await expect(page.getByTestId("library-table")).toContainText(`E2E pullback ${RUN}`);
 });

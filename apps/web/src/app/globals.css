@@ -190,6 +190,9 @@ th.num {
 .evidence-arf_calculated {
   color: #69c0ff;
 }
+.evidence-external {
+  color: #d39cff;
+}
 .state {
   padding: 14px;
   border-radius: 8px;

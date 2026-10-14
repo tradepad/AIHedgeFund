@@ -22,6 +22,7 @@ export const AuditActionSchema = z.enum([
   "DECISION_RECORDED",
   "HUMAN_OVERRIDE",
   "PROTECTED_ARTEFACT_READ",
+  "EXTERNAL_EVIDENCE_IMPORTED",
 ]);
 export type AuditAction = z.infer<typeof AuditActionSchema>;
 

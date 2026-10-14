@@ -4,6 +4,7 @@ import { HandoffSchema } from "./handoff";
 import { SignalEventSchema } from "./signal-event";
 import { IdeaCardSchema } from "./idea-card";
 import { PineManifestSchema } from "./pine";
+import { ExternalImportBundleSchema } from "./external-results";
 
 /**
  * Zod is canonical. The JSON Schema files in `/schemas` are generated from
@@ -29,6 +30,10 @@ export const publishedJsonSchemas = {
   "pine-manifest.schema.json": {
     id: "https://arf-os.dev/schemas/pine-manifest/1.0.0",
     schema: PineManifestSchema,
+  },
+  "external-import-bundle.schema.json": {
+    id: "https://arf-os.dev/schemas/external-import-bundle/1.0.0",
+    schema: ExternalImportBundleSchema,
   },
 } as const;
 

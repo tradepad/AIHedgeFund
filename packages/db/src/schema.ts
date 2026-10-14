@@ -4,6 +4,7 @@ import {
   bigserial,
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -42,6 +43,12 @@ import {
   AuditActionSchema,
   PromptStatusSchema,
   AgentRunStatusSchema,
+  ExternalEngineSchema,
+  ExternalProvenanceSchema,
+  ExternalRunStatusSchema,
+  ExternalSegmentSchema,
+  ExternalSourceLanguageSchema,
+  ExternalVerdictSchema,
 } from "@arf/contracts";
 
 /** Zod enums are never empty, so their options always form a non-empty tuple. */
@@ -79,6 +86,15 @@ export const aggregateType = pgEnum("aggregate_type", tuple(AggregateTypeSchema)
 export const auditAction = pgEnum("audit_action", tuple(AuditActionSchema));
 export const promptStatus = pgEnum("prompt_status", tuple(PromptStatusSchema));
 export const agentRunStatus = pgEnum("agent_run_status", tuple(AgentRunStatusSchema));
+export const externalEngine = pgEnum("external_engine", tuple(ExternalEngineSchema));
+export const externalProvenance = pgEnum("external_provenance", tuple(ExternalProvenanceSchema));
+export const externalSegment = pgEnum("external_segment", tuple(ExternalSegmentSchema));
+export const externalRunStatus = pgEnum("external_run_status", tuple(ExternalRunStatusSchema));
+export const externalVerdict = pgEnum("external_verdict", tuple(ExternalVerdictSchema));
+export const externalSourceLanguage = pgEnum(
+  "external_source_language",
+  tuple(ExternalSourceLanguageSchema),
+);
 export const idempotencyState = pgEnum("idempotency_state", ["IN_PROGRESS", "COMPLETED"]);
 
 const ts = (name: string) => timestamp(name, { withTimezone: true, mode: "date" });
@@ -624,6 +640,111 @@ export const parityReports = pgTable(
   },
   (t) => [
     uniqueIndex("parity_reports_verification_policy_uq").on(t.verificationId, t.policyVersion),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// External evidence (research done outside ARF-OS). Never ARF-calculated and
+// never TradingView-verified; it cannot satisfy workflow evidence.
+// ---------------------------------------------------------------------------
+export const externalImportBatches = pgTable(
+  "external_import_batches",
+  {
+    id: uuid("id").primaryKey(),
+    organisationId: orgId(),
+    batchKey: text("batch_key").notNull(),
+    title: text("title").notNull(),
+    description: text("description").notNull(),
+    schemaVersion: text("schema_version").notNull(),
+    bundleArtefactId: uuid("bundle_artefact_id")
+      .notNull()
+      .references(() => artefacts.id),
+    bundleSha256: text("bundle_sha256").notNull(),
+    importedBy: uuid("imported_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("external_import_batches_org_sha_uq").on(t.organisationId, t.bundleSha256)],
+);
+
+export const externalStrategyImports = pgTable(
+  "external_strategy_imports",
+  {
+    id: uuid("id").primaryKey(),
+    organisationId: orgId(),
+    batchId: uuid("batch_id")
+      .notNull()
+      .references(() => externalImportBatches.id),
+    importKey: text("import_key").notNull(),
+    strategyVersionId: uuid("strategy_version_id")
+      .notNull()
+      .references(() => strategyVersions.id)
+      .unique(),
+    externalStrategyId: text("external_strategy_id"),
+    sourceLanguage: externalSourceLanguage("source_language"),
+    sourceSha256: text("source_sha256"),
+    sourceArtefactId: uuid("source_artefact_id").references(() => artefacts.id),
+    importedBy: uuid("imported_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("external_strategy_imports_org_key_uq").on(t.organisationId, t.importKey),
+    check(
+      "external_strategy_imports_source_ck",
+      sql`(${t.sourceArtefactId} IS NULL) = (${t.sourceSha256} IS NULL) AND (${t.sourceSha256} IS NULL) = (${t.sourceLanguage} IS NULL)`,
+    ),
+  ],
+);
+
+export const externalBacktestResults = pgTable(
+  "external_backtest_results",
+  {
+    id: uuid("id").primaryKey(),
+    organisationId: orgId(),
+    strategyImportId: uuid("strategy_import_id")
+      .notNull()
+      .references(() => externalStrategyImports.id),
+    strategyVersionId: uuid("strategy_version_id")
+      .notNull()
+      .references(() => strategyVersions.id),
+    resultKey: text("result_key").notNull(),
+    contentHash: text("content_hash").notNull(),
+    engine: externalEngine("engine").notNull(),
+    engineVersion: text("engine_version"),
+    provenance: externalProvenance("provenance").notNull(),
+    segment: externalSegment("segment").notNull(),
+    runStatus: externalRunStatus("run_status").notNull(),
+    windowFrom: date("window_from", { mode: "string" }),
+    windowTo: date("window_to", { mode: "string" }),
+    externalResultId: text("external_result_id"),
+    closedTradeCount: integer("closed_trade_count"),
+    profitFactor: money("profit_factor"),
+    maxDrawdownPct: money("max_drawdown_pct"),
+    netProfitPct: money("net_profit_pct"),
+    netProfit: money("net_profit"),
+    largestWin: money("largest_win"),
+    currency: text("currency"),
+    extraMetrics: jsonb("extra_metrics").notNull(),
+    settings: jsonb("settings").notNull(),
+    verdict: externalVerdict("verdict").notNull(),
+    verdictReasons: text("verdict_reasons").array().notNull(),
+    notes: text("notes").array().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("external_backtest_results_org_key_uq").on(t.organisationId, t.resultKey),
+    index("external_backtest_results_version_idx").on(t.organisationId, t.strategyVersionId),
+    check(
+      "external_backtest_results_window_ck",
+      sql`${t.windowFrom} IS NULL OR ${t.windowTo} IS NULL OR ${t.windowFrom} <= ${t.windowTo}`,
+    ),
+    check(
+      "external_backtest_results_not_run_ck",
+      sql`${t.runStatus} <> 'NOT_RUN' OR (${t.closedTradeCount} IS NULL AND ${t.profitFactor} IS NULL AND ${t.netProfit} IS NULL)`,
+    ),
   ],
 );
 

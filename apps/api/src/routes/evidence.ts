@@ -15,6 +15,7 @@ import { authorise } from "../http/auth";
 import { runIdempotent } from "../http/idempotency";
 import { problems } from "../http/problem";
 import { getDecisionContext, recordDecision } from "../services/decisions";
+import { getExternalEvidence } from "../services/external-evidence";
 import * as oversight from "../services/oversight";
 import * as results from "../services/results";
 import * as verifications from "../services/verifications";
@@ -29,6 +30,12 @@ export function evidenceRoutes(app: FastifyInstance, ctx: AppContext): void {
       status: 201,
       body: await verifications.createVerification(tx, scope, body),
     }));
+  });
+
+  // --- External evidence (imported, never ARF-verified) --------------------
+  app.get("/v1/strategy-versions/:id/external-evidence", async (request) => {
+    const scope = authorise(request, "read");
+    return getExternalEvidence(ctx, scope, IdParams.parse(request.params).id);
   });
 
   app.get("/v1/strategy-versions/:id/verifications", async (request) => {

@@ -9,7 +9,8 @@
     "build": "tsup",
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "import:external": "tsx --env-file-if-exists=../../.env src/scripts/import-external.ts"
   },
   "dependencies": {
     "@arf/agent-runtime": "workspace:*",
@@ -35,6 +36,7 @@
     "./app": "./src/app.ts",
     "./background": "./src/background.ts",
     "./config": "./src/config.ts",
-    "./context": "./src/context.ts"
+    "./context": "./src/context.ts",
+    "./services/external-evidence": "./src/services/external-evidence.ts"
   }
 }

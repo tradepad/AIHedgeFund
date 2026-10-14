@@ -17,6 +17,7 @@
     "db:generate": "pnpm --filter @arf/db db:generate",
     "db:migrate": "pnpm --filter @arf/db db:migrate",
     "db:seed": "pnpm --filter @arf/db db:seed",
+    "import:external": "pnpm --filter @arf/api import:external",
     "schemas:generate": "pnpm --filter @arf/contracts schemas:generate",
     "services:up": "bash infra/scripts/dev-services.sh up",
     "services:down": "bash infra/scripts/dev-services.sh down",
