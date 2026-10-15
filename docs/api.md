@@ -46,6 +46,7 @@ with the schemas in `@arf/contracts`.
 | `GET /v1/tradingview-verifications/:id/events` | read | Server-sent progress events |
 | `GET /v1/tradingview-verifications/:id/parity` | read | Parity report |
 | `GET /v1/backtest-runs/:id` · `/trades` · `/equity` · `/metrics` | read | Results (labelled historical simulation) |
+| `GET /v1/strategy-versions/:id/external-evidence` | read | Imported external results and source for a version (ADR 0005) |
 | `GET /v1/strategy-versions/:id/decision-context` | read | Evidence computed by the server for a decision |
 | `POST /v1/committee/decisions` | decision:write | Record REJECT, REWORK_WITH_NEW_VERSION or PAPER_APPROVED |
 | `GET /v1/command-centre` · `GET /v1/strategy-library` | read | Oversight views |

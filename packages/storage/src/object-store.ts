@@ -57,6 +57,12 @@ export const objectPaths = {
   ideaCard(orgId: string, campaignId: string, sha: string): string {
     return `orgs/${orgId}/campaigns/${campaignId}/ideas/idea-${sha}.json`;
   },
+  externalImportBundle(orgId: string, sha: string): string {
+    return `orgs/${orgId}/external-imports/bundle-${sha}.json`;
+  },
+  externalSource(base: string, sha: string, extension: "pine" | "py"): string {
+    return `${base}/external/source-${sha}.${extension}`;
+  },
   agentRawOutput(orgId: string, campaignId: string, runId: string, sha: string): string {
     return `orgs/${orgId}/campaigns/${campaignId}/agent-runs/${runId}/protected/raw-output-${sha}.json`;
   },

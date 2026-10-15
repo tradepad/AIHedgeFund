@@ -1,0 +1,499 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "batchId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._/-]{2,199}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 200
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 4000
+    },
+    "campaigns": {
+      "minItems": 1,
+      "maxItems": 50,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 120
+          },
+          "objective": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 2000
+          },
+          "assetClasses": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "crypto",
+                "equity",
+                "fx",
+                "futures",
+                "index",
+                "commodity"
+              ]
+            }
+          },
+          "timeframes": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^(\\d+|\\d*[DWM])$"
+            }
+          },
+          "strategies": {
+            "minItems": 1,
+            "maxItems": 500,
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 3,
+                  "maxLength": 120
+                },
+                "family": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9_]*$"
+                },
+                "versions": {
+                  "minItems": 1,
+                  "maxItems": 20,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9][a-z0-9._/-]{2,199}$"
+                      },
+                      "symbol": {
+                        "type": "string",
+                        "pattern": "^[A-Z0-9_]+:[A-Z0-9._!-]+$"
+                      },
+                      "timeframe": {
+                        "type": "string",
+                        "pattern": "^(\\d+|\\d*[DWM]|\\d+S)$"
+                      },
+                      "description": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 1000
+                      },
+                      "change": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "categories": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "PINE_SOURCE",
+                                    "DEFINITION",
+                                    "PARAMETERS",
+                                    "SYMBOL",
+                                    "TIMEFRAME",
+                                    "SESSION",
+                                    "COST_MODEL",
+                                    "POSITION_SIZING",
+                                    "LEVERAGE",
+                                    "EXECUTION",
+                                    "DATASET",
+                                    "RUNNER",
+                                    "SEGMENTS"
+                                  ]
+                                }
+                              },
+                              "fields": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "minLength": 1
+                                }
+                              }
+                            },
+                            "required": [
+                              "categories",
+                              "fields"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "externalStrategyId": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 100
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "source": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "language": {
+                                "type": "string",
+                                "enum": [
+                                  "PINE",
+                                  "PYTHON"
+                                ]
+                              },
+                              "code": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 200000
+                              }
+                            },
+                            "required": [
+                              "language",
+                              "code"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      },
+                      "results": {
+                        "minItems": 1,
+                        "maxItems": 50,
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string",
+                              "pattern": "^[a-z0-9][a-z0-9._/-]{2,199}$"
+                            },
+                            "engine": {
+                              "type": "string",
+                              "enum": [
+                                "TRADER_DEV",
+                                "OFFLINE_SCRIPT"
+                              ]
+                            },
+                            "engineVersion": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "provenance": {
+                              "type": "string",
+                              "enum": [
+                                "OUR_RUN",
+                                "AUTHOR_REPORTED"
+                              ]
+                            },
+                            "segment": {
+                              "type": "string",
+                              "enum": [
+                                "IN_SAMPLE",
+                                "HOLDOUT",
+                                "OUT_OF_SAMPLE",
+                                "FULL_HISTORY",
+                                "SUB_PERIOD",
+                                "AUTHOR_WINDOW"
+                              ]
+                            },
+                            "runStatus": {
+                              "type": "string",
+                              "enum": [
+                                "COMPLETED",
+                                "NOT_RUN"
+                              ]
+                            },
+                            "windowFrom": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "windowTo": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "format": "date",
+                                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "externalResultId": {
+                              "anyOf": [
+                                {
+                                  "type": "string",
+                                  "minLength": 1,
+                                  "maxLength": 100
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "metrics": {
+                              "type": "object",
+                              "properties": {
+                                "closedTradeCount": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "profitFactor": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "maxDrawdownPct": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "netProfitPct": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "netProfit": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "largestWin": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "currency": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "pattern": "^[A-Z]{3,5}$"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "closedTradeCount",
+                                "profitFactor",
+                                "maxDrawdownPct",
+                                "netProfitPct",
+                                "netProfit",
+                                "largestWin",
+                                "currency"
+                              ],
+                              "additionalProperties": false
+                            },
+                            "extraMetrics": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "pattern": "^[a-z][a-z0-9_]{0,63}$"
+                              },
+                              "additionalProperties": {
+                                "type": "string",
+                                "pattern": "^-?(0|[1-9]\\d*)(\\.\\d+)?$"
+                              }
+                            },
+                            "settings": {
+                              "type": "object",
+                              "propertyNames": {
+                                "type": "string",
+                                "pattern": "^[a-zA-Z][a-zA-Z0-9_]{0,63}$"
+                              },
+                              "additionalProperties": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "maxLength": 500
+                                  },
+                                  {
+                                    "type": "number"
+                                  },
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              }
+                            },
+                            "verdict": {
+                              "type": "string",
+                              "enum": [
+                                "PASS",
+                                "FAIL",
+                                "INCONCLUSIVE",
+                                "NOT_EVALUATED"
+                              ]
+                            },
+                            "verdictReasons": {
+                              "maxItems": 20,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 300
+                              }
+                            },
+                            "notes": {
+                              "maxItems": 20,
+                              "type": "array",
+                              "items": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 500
+                              }
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "engine",
+                            "engineVersion",
+                            "provenance",
+                            "segment",
+                            "runStatus",
+                            "windowFrom",
+                            "windowTo",
+                            "externalResultId",
+                            "metrics",
+                            "extraMetrics",
+                            "settings",
+                            "verdict",
+                            "verdictReasons",
+                            "notes"
+                          ],
+                          "additionalProperties": false
+                        }
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "symbol",
+                      "timeframe",
+                      "description",
+                      "change",
+                      "externalStrategyId",
+                      "source",
+                      "results"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "family",
+                "versions"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "name",
+          "objective",
+          "assetClasses",
+          "timeframes",
+          "strategies"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "batchId",
+    "title",
+    "description",
+    "campaigns"
+  ],
+  "additionalProperties": false,
+  "$id": "https://arf-os.dev/schemas/external-import-bundle/1.0.0"
+}

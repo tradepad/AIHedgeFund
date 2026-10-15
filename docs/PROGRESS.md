@@ -19,6 +19,11 @@ Tracks the milestones in `CLAUDE_CODE_BUILD_PROMPT.md`.
 | 13 | Tests | done | unit tests per package, `tests/integration`, `apps/web/e2e` |
 | 14 | Documentation and local setup | done | `README.md`, `.env.example`, `docs/` |
 
+## After the slice
+
+- External evidence import (ADR 0005): `pnpm import:external` brings research
+  done outside ARF-OS into the registry as labelled, non-verified evidence.
+
 ## Known limitations of this slice
 
 - TradingView fixtures are synthetic; no real export has been run through the

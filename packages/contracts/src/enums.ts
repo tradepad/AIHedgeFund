@@ -118,6 +118,8 @@ export const ArtefactKindSchema = z.enum([
   "IDEA_CARD",
   "AGENT_RAW_OUTPUT",
   "DECISION_EVIDENCE_PACK",
+  "EXTERNAL_IMPORT_BUNDLE",
+  "EXTERNAL_STRATEGY_SOURCE",
 ]);
 export type ArtefactKind = z.infer<typeof ArtefactKindSchema>;
 

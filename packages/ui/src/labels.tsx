@@ -16,7 +16,8 @@ export type EvidenceKind =
   | "PAPER"
   | "TRADINGVIEW"
   | "ARF_CALCULATED"
-  | "LOCAL_RUNNER";
+  | "LOCAL_RUNNER"
+  | "EXTERNAL";
 
 const EVIDENCE_TEXT: Record<EvidenceKind, string> = {
   IN_SAMPLE: "In-sample",
@@ -30,6 +31,7 @@ const EVIDENCE_TEXT: Record<EvidenceKind, string> = {
   TRADINGVIEW: "TradingView reported",
   ARF_CALCULATED: "ARF calculated",
   LOCAL_RUNNER: "Local runner",
+  EXTERNAL: "External · not ARF-verified",
 };
 
 export function EvidenceLabel({ kind }: { kind: EvidenceKind }) {

@@ -17,6 +17,7 @@ import { ProblemView } from "@/components/problem";
 import { Utc } from "@/components/time";
 import { apiGet } from "@/lib/server-api";
 import { DefinitionTab } from "./definition-tab";
+import { ExternalTab } from "./external-tab";
 import { PineTab } from "./pine-tab";
 import { ResultsTab } from "./results-tab";
 import { ParityTab } from "./parity-tab";
@@ -32,6 +33,7 @@ const TABS = [
   "verification",
   "results",
   "parity",
+  "external",
   "lineage",
   "audit",
 ] as const;
@@ -103,6 +105,8 @@ async function renderTab(tab: Tab, v: StrategyVersion, cursor: string | undefine
       return <ResultsTab version={v} cursor={cursor} />;
     case "parity":
       return <ParityTab version={v} />;
+    case "external":
+      return <ExternalTab version={v} />;
     case "lineage":
       return <Lineage id={v.id} />;
     case "audit": {
