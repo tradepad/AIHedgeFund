@@ -2,7 +2,13 @@
   "mcpServers": {
     "tradingview": {
       "command": "bash",
-      "args": ["infra/mcp/tradingview-search.sh"]
+      "args": [
+        "infra/mcp/tradingview-search.sh"
+      ]
+    },
+    "tradingkit": {
+      "type": "http",
+      "url": "https://app.tradingkit.com/mcp/pro"
     }
   }
 }
