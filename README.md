@@ -1,4 +1,4 @@
-# ARF-OS
+# ARF-OS - [My_AiHedgeFund_TradingKit]
 
 ## AI Research Hedge Fund Operating System
 
