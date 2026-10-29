@@ -1,5 +1,7 @@
 # ARF-OS - [My_AiHedgeFund_TradingKit]
 
+> **Archived (29 Oct 2026).** This project is no longer developed. The owner's research continues in a separate private project. This repository is kept read-only for reference.
+
 ## AI Research Hedge Fund Operating System
 
 **A multi-agent operating system for discovering, developing, testing, rejecting, forward-testing, and cataloguing systematic trading strategies.**
